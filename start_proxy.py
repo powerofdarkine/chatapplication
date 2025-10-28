@@ -74,7 +74,7 @@ def parse_virtual_hosts(config_file):
         proxy_map[host] = map
 
         # Find dist_policy if present
-        policy_match = re.search(r'dist_policy\s+(\w+)', block)
+        policy_match = re.search(r'dist_policy\s+([\w-]+)', block)
         if policy_match:
             dist_policy_map = policy_match.group(1)
         else: #default policy is round_robin
@@ -97,7 +97,7 @@ def parse_virtual_hosts(config_file):
             routes[host] = (proxy_map.get(host,[]), dist_policy_map)
 
     for key, value in routes.items():
-        print key, value
+        print(key, value)
     return routes
 
 
