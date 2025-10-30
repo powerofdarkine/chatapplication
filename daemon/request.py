@@ -21,20 +21,7 @@ from .dictionary import CaseInsensitiveDict
 
 class Request():
     """The fully mutable "class" `Request <Request>` object,
-    containing the exact bytes that will be sent to the server.
-
-    Instances are generated from a "class" `Request <Request>` object, and
-    should not be instantiated manually; doing so may produce undesirable
-    effects.
-
-    Usage::
-
-      >>> import deamon.request
-      >>> req = request.Request()
-      ## Incoming message obtain aka. incoming_msg
-      >>> r = req.prepare(incoming_msg)
-      >>> r
-      <Request>
+    ...
     """
     __attrs__ = [
         "method",
@@ -54,11 +41,12 @@ class Request():
         #: HTTP URL to send the request to.
         self.url = None
         #: dictionary of HTTP headers.
-        self.headers = None
+        # <--- HOÀN THIỆN: Khởi tạo là CaseInsensitiveDict
+        self.headers = CaseInsensitiveDict() 
         #: HTTP path
         self.path = None        
         # The cookies set used to create Cookie header
-        self.cookies = None
+        self.cookies = {} # <--- HOÀN THIỆN: Khởi tạo là dict
         #: request body to send to the server.
         self.body = None
         #: Routes
@@ -66,75 +54,114 @@ class Request():
         #: Hook point for routed mapped-path
         self.hook = None
 
-    def extract_request_line(self, request):
+    def extract_request_line(self, first_line):
+        """
+        Parses the first line of an HTTP request.
+        :param first_line (str): The raw request line (e.g., "GET /path HTTP/1.1")
+        """
         try:
-            lines = request.splitlines()
-            first_line = lines[0]
+            # <--- HOÀN THIỆN: Sửa logic để chỉ xử lý 1 dòng
             method, path, version = first_line.split()
 
             if path == '/':
-                path = '/index.html'
-        except Exception:
-            return None, None
-
-        return method, path, version
-             
-    def prepare_headers(self, request):
-        """Prepares the given HTTP headers."""
-        lines = request.split('\r\n')
-        headers = {}
-        for line in lines[1:]:
+                path = '/index.html' # Mặc định trỏ / về index.html
+            
+            return method, path, version
+        except Exception as e:
+            print(f"[Request] Error parsing request line '{first_line}': {e}")
+            return None, None, None
+            
+    def prepare_headers(self, header_lines_list):
+        """
+        Prepares the given HTTP headers from a list of strings.
+        :param header_lines_list (list): A list of raw header strings.
+        """
+        headers = CaseInsensitiveDict() # <--- HOÀN THIỆN
+        
+        # <--- HOÀN THIỆN: Sửa logic để xử lý một list các dòng header
+        for line in header_lines_list:
             if ': ' in line:
                 key, val = line.split(': ', 1)
-                headers[key.lower()] = val
+                headers[key] = val # Tự động là case-insensitive
         return headers
 
     def prepare(self, request, routes=None):
         """Prepares the entire request with the given parameters."""
 
-        # Prepare the request line from the request header
-        self.method, self.path, self.version = self.extract_request_line(request)
+        # <--- HOÀN THIỆN: Viết lại toàn bộ logic phân tích (parsing)
+        
+        # 1. Tách Header Block và Body
+        # Dấu hiệu kết thúc header là 2 lần xuống dòng
+        try:
+            header_block, self.body = request.split('\r\n\r\n', 1)
+        except ValueError:
+            # Nếu không có body, gán body là chuỗi rỗng
+            header_block = request
+            self.body = ""
+
+        # 2. Tách Request Line và các Header
+        header_lines = header_block.splitlines()
+        first_line = header_lines[0]
+        other_header_lines = header_lines[1:] # Các dòng header thực sự
+
+        # 3. Phân tích Request Line
+        self.method, self.path, self.version = self.extract_request_line(first_line)
+        if not self.method:
+            print("[Request] Could not parse request line. Aborting.")
+            return
+
         print("[Request] {} path {} version {}".format(self.method, self.path, self.version))
 
-        #
+        # 4. Phân tích Headers
+        self.headers = self.prepare_headers(other_header_lines)
+        
+        # 5. Phân tích Cookies (TODO)
+        cookie_string = self.headers.get('Cookie') # Dùng .get() để tránh lỗi
+        if cookie_string:
+            for pair in cookie_string.split(';'):
+                pair = pair.strip()
+                if '=' in pair:
+                    key, val = pair.split('=', 1) # Tách ở dấu = đầu tiên
+                    self.cookies[key] = val
+        
+        # 6. Tìm Hook (TODO)
         # @bksysnet Preapring the webapp hook with WeApRous instance
         # The default behaviour with HTTP server is empty routed
         #
-        # TODO manage the webapp hook in this mounting point
-        #
-        
-        if not routes == {}:
+        if routes: # routes không rỗng (tức là đang chạy WeApRous)
             self.routes = routes
+            # Tìm hook dựa trên (METHOD, PATH)
             self.hook = routes.get((self.method, self.path))
             #
             # self.hook manipulation goes here
-            # ...
+            # (Không cần làm gì thêm, self.hook giờ đã là
+            #  hàm 'login' hoặc 'hello' trong start_sampleapp.py)
             #
-
-        self.headers = self.prepare_headers(request)
-        cookies = self.headers.get('cookie', '')
-            #
-            #  TODO: implement the cookie function here
-            #        by parsing the header            #
+        # --- KẾT THÚC HOÀN THIỆN ---
 
         return
 
+    # --- Các hàm bên dưới dường như là "di sản" (artifact) ---
+    # --- từ một thư viện client (như 'requests') và không   ---
+    # --- thực sự cần thiết cho việc *parsing* một request   ---
+    # --- của server. Chúng ta có thể bỏ qua các TODO ở đây. ---
+    
     def prepare_body(self, data, files, json=None):
-        self.prepare_content_length(self.body)
-        self.body = body
+        # self.prepare_content_length(self.body)
+        # self.body = body # Biến body không được định nghĩa
         #
         # TODO prepare the request authentication
         #
-	# self.auth = ...
+    # self.auth = ...
         return
 
 
     def prepare_content_length(self, body):
-        self.headers["Content-Length"] = "0"
+        # self.headers["Content-Length"] = "0"
         #
         # TODO prepare the request authentication
         #
-	# self.auth = ...
+    # self.auth = ...
         return
 
 
@@ -142,7 +169,7 @@ class Request():
         #
         # TODO prepare the request authentication
         #
-	# self.auth = ...
+    # self.auth = ...
         return
 
     def prepare_cookies(self, cookies):

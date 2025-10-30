@@ -39,7 +39,7 @@ import socket
 import threading
 import argparse
 import re
-from urlparse import urlparse
+from urllib.parse import urlparse
 from collections import defaultdict
 
 from daemon import create_proxy
@@ -61,43 +61,33 @@ def parse_virtual_hosts(config_file):
     # Match each host block
     host_blocks = re.findall(r'host\s+"([^"]+)"\s*\{(.*?)\}', config_text, re.DOTALL)
 
-    dist_policy_map = ""
 
     routes = {}
     for host, block in host_blocks:
-        proxy_map = {}
-
         # Find all proxy_pass entries
         proxy_passes = re.findall(r'proxy_pass\s+http://([^\s;]+);', block)
-        map = proxy_map.get(host,[])
-        map = map + proxy_passes
-        proxy_map[host] = map
 
-        # Find dist_policy if present
         policy_match = re.search(r'dist_policy\s+([\w-]+)', block)
-        if policy_match:
-            dist_policy_map = policy_match.group(1)
-        else: #default policy is round_robin
-            dist_policy_map = 'round-robin'
-            
-        #
-        # @bksysnet: Build the mapping and policy
-        # TODO: this policy varies among scenarios 
-        #       the default policy is provided with one proxy_pass
-        #       In the multi alternatives of proxy_pass then
-        #       the policy is applied to identify the highes matching
-        #       proxy_pass
-        #
-        if len(proxy_map.get(host,[])) == 1:
-            routes[host] = (proxy_map.get(host,[])[0], dist_policy_map)
-        # esle if:
-        #         TODO:  apply further policy matching here
-        #
-        else:
-            routes[host] = (proxy_map.get(host,[]), dist_policy_map)
+        policy = policy_match.group(1) if policy_match else 'round-robin'
 
+        headers = {}
+        header_matches = re.findall(r'proxy_set_header\s+([^;\s]+)\s+([^;\s]+);', block)
+        for header_name, header_value in header_matches:
+            headers[header_name] = header_value
+        
+        if proxy_passes:  
+            routes[host] = {
+                'backends': proxy_passes,
+                'policy': policy,
+                'headers': headers
+            }
+    
+    # DEBUG PRINT
+    print("--- Proxy Routes Loaded ---")
     for key, value in routes.items():
-        print(key, value)
+        print(f"[Host] {key}:\n  -> Backends: {value['backends']}\n  -> Policy: {value['policy']}\n  -> Headers: {value['headers']}")
+    print("---------------------------")
+    
     return routes
 
 
@@ -114,7 +104,7 @@ if __name__ == "__main__":
     """
 
     parser = argparse.ArgumentParser(prog='Proxy', description='', epilog='Proxy daemon')
-    parser.add_argument('--server-ip', default='0.0.0.0')
+    parser.add_argument('--server-ip', default='127.0.0.1')
     parser.add_argument('--server-port', type=int, default=PROXY_PORT)
  
     args = parser.parse_args()

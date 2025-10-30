@@ -20,6 +20,7 @@ raw URL paths and RESTful route definitions, and integrates with
 Request and Response objects to handle client-server communication.
 """
 
+import base64
 from .request import Request
 from .response import Response
 from .dictionary import CaseInsensitiveDict
@@ -28,20 +29,7 @@ class HttpAdapter:
     """
     A mutable :class:`HTTP adapter <HTTP adapter>` for managing client connections
     and routing requests.
-
-    The `HttpAdapter` class encapsulates the logic for receiving HTTP requests,
-    dispatching them to appropriate route handlers, and constructing responses.
-    It supports RESTful routing via hooks and integrates with :class:`Request <Request>` 
-    and :class:`Response <Response>` objects for full request lifecycle management.
-
-    Attributes:
-        ip (str): IP address of the client.
-        port (int): Port number of the client.
-        conn (socket): Active socket connection.
-        connaddr (tuple): Address of the connected client.
-        routes (dict): Mapping of route paths to handler functions.
-        request (Request): Request object for parsing incoming data.
-        response (Response): Response object for building and sending replies.
+    ...
     """
 
     __attrs__ = [
@@ -80,6 +68,41 @@ class HttpAdapter:
         #: Response
         self.response = Response()
 
+    def check_authentication(self, req):
+        import base64
+        cookies = self.extract_cookies(req)
+        auth_cookie = cookies.get('auth')
+
+        if not auth_cookie:
+            return (False, None)
+
+        # legacy boolean token
+        if auth_cookie == 'true':
+            username = cookies.get('username', 'admin')
+            return (True, username)
+
+        try:
+            decoded = base64.b64decode(auth_cookie).decode('utf-8')
+            username, password = decoded.split(':', 1)
+        except Exception:
+            return (False, None)
+
+        # Try to validate against application USERS if available
+        try:
+            import start_sampleapp
+            USERS = getattr(start_sampleapp, 'USERS', {})
+        except Exception:
+            USERS = {}
+
+        if USERS:
+            if USERS.get(username) == password:
+                return (True, username)
+            else:
+                return (False, None)
+        else:
+            # Fallback: accept decoded token if no USERS available
+            return (True, username)
+
     def handle_client(self, conn, addr, routes):
         """
         Handle an incoming client connection.
@@ -102,49 +125,140 @@ class HttpAdapter:
         # Response handler
         resp = self.response
 
-        # Handle the request
-        msg = conn.recv(1024).decode()
-        req.prepare(msg, routes)
+        try: # <--- HOÀN THIỆN: Thêm try...except để xử lý lỗi
+            
+            # Handle the request
+            # <--- CẢI TIẾN: Tăng buffer size và kiểm tra kết nối rỗng
+            msg_bytes = conn.recv(8192) # 8KB buffer
+            if not msg_bytes:
+                print(f"[HttpAdapter] Connection from {addr} is empty. Closing.")
+                return # Client kết nối rồi ngắt ngay, backend.py sẽ đóng socket
+                
+            msg = msg_bytes.decode('utf-8')
+            # <--- KẾT THÚC CẢI TIẾN
+            
+            # Yêu cầu Request object phân tích msg thô
+            # (Hàm này phải tự parse headers, body, và tìm 'hook')
+            req.prepare(msg, routes)
 
-        # Handle request hook
-        if req.hook:
-            print("[HttpAdapter] hook in route-path METHOD {} PATH {}".format(req.hook._route_path,req.hook._route_methods))
-            req.hook(headers = "bksysnet",body = "get in touch")
-            #
-            # TODO: handle for App hook here
-            #
+            PUBLIC_PATHS = ['/login', '/login.html', '/css/', '/js/', '/images/', '/favicon.ico']
 
-        # Build response
-        response = resp.build_response(req)
+            # <--- HOÀN THIỆN TODO: Xử lý App hook
+            # Handle request hook
+            needs_auth = True
+            for public_path in PUBLIC_PATHS:
+                if req.path.startswith(public_path):
+                    needs_auth = False
+                    break
 
-        #print(response)
-        conn.sendall(response)
-        conn.close()
+            if needs_auth:
+                is_authenticated, username = self.check_authentication(req)
 
-    @property
-    def extract_cookies(self, req, resp):
+                if not is_authenticated:
+                    print(f"[HttpAdapter] Unauthorized access attempt to {req.path} from {addr}")
+
+                    accept = req.headers.get('Accept', '')
+                    is_html_request = req.path in ('/', '/index.html') or 'text/html' in accept
+
+                    if is_html_request:
+                        resp.status_code = 302
+                        resp.reason = "Found"
+                        resp.headers['Location'] = '/login.html'
+                        resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+                        resp._content = b'<html><body>Redirecting to <a href="/login.html">login</a></body></html>'
+                        resp._has_dynamic_content = True
+                    else:
+                        resp.status_code = 401
+                        resp.reason = "Unauthorized"
+                        resp.headers['Content-Type'] = 'text/plain'
+                        resp.headers['WWW-Authenticate'] = 'Cookie realm="Login Required"'
+                        resp._content = b'401 Unauthorized'
+                        resp._has_dynamic_content = True
+
+                    response = resp.build_response(req)
+                    conn.sendall(response)
+                    return
+                else:
+                    print(f"[HttpAdapter] Authenticated user '{username}' accessing {req.path}")
+                    
+                    req.username = username
+
+            if req.hook:
+                print(f"[HttpAdapter] hook in route-path METHOD {req.method} PATH {req.path}")
+                
+                # Gọi hook (hàm trong start_sampleapp.py) 
+                # với dữ liệu THỰC TẾ từ request
+                try:
+                    hook_response_data = req.hook(
+                        headers=req.headers, 
+                        body=req.body,
+                        username = getattr(req, 'username', None)
+                    )
+                    
+                    # Báo cho Response object biết có dữ liệu động
+                    if isinstance(hook_response_data, dict):
+                        resp.set_dynamic_content(hook_response_data)
+                    else:
+                        # Fallback: nếu hook trả về string/bytes
+                        resp._content = str(hook_response_data).encode('utf-8') if isinstance(hook_response_data, str) else hook_response_data
+                
+                except Exception as e:
+                    print(f"[HttpAdapter] Error during hook execution: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    resp.set_error(500, "Server Error")
+            
+            # <--- KẾT THÚC HOÀN THIỆN TODO
+            
+            # Build response
+            # Hàm này trong response.py sẽ tự biết:
+            # 1. Ưu tiên trả về lỗi (nếu có)
+            # 2. Ưu tiên trả về dữ liệu hook (nếu có)
+            # 3. Cuối cùng mới tìm file tĩnh (static file)
+            response = resp.build_response(req)
+            
+            #print(response)
+            conn.sendall(response)
+            
+            # <--- LỖI QUAN TRỌNG: ĐÃ XÓA conn.close()
+            # conn.close() # XÓA DÒNG NÀY!
+            # (File backend.py sẽ tự động đóng kết nối)
+            
+        except Exception as e:
+            print(f"[HttpAdapter] Error handling client {addr}: {e}")
+            # Đừng đóng conn ở đây, hãy để backend.py xử lý
+
+    # <--- HOÀN THIỆN: Sửa lỗi cú pháp của @property
+    # Đây không phải là @property, đây là một method.
+    def extract_cookies(self, req):
         """
         Build cookies from the :class:`Request <Request>` headers.
 
         :param req:(Request) The :class:`Request <Request>` object.
-        :param resp: (Response) The res:class:`Response <Response>` object.
         :rtype: cookies - A dictionary of cookie key-value pairs.
         """
         cookies = {}
-        for header in headers:
-            if header.startswith("Cookie:"):
-                cookie_str = header.split(":", 1)[1].strip()
-                for pair in cookie_str.split(";"):
-                    key, value = pair.strip().split("=")
+        # Lấy header 'Cookie' từ request object
+        cookie_header = req.headers.get('Cookie')
+        
+        if cookie_header:
+            for pair in cookie_header.split(";"):
+                try:
+                    # Tách key, value
+                    key, value = pair.strip().split("=", 1)
                     cookies[key] = value
+                except ValueError:
+                    # Bỏ qua cookie bị lỗi (ví dụ: "mycookie" không có "=")
+                    pass
         return cookies
+    # <--- KẾT THÚC HOÀN THIỆN
 
     def build_response(self, req, resp):
         """Builds a :class:`Response <Response>` object 
-
-        :param req: The :class:`Request <Request>` used to generate the response.
-        :param resp: The  response object.
-        :rtype: Response
+        
+        <... Ghi chú: Phần code này có vẻ bị trùng lặp 
+         với logic của daemon/response.py và có thể không được 
+         gọi. Logic xử lý chính nằm trong handle_client ...>
         """
         response = Response()
 
@@ -159,7 +273,8 @@ class HttpAdapter:
             response.url = req.url
 
         # Add new cookies from the server.
-        response.cookies = extract_cookies(req)
+        # <--- HOÀN THIỆN: Sửa lỗi gọi hàm
+        response.cookies = self.extract_cookies(req) # Phải gọi self.
 
         # Give the Response some context.
         response.request = req
@@ -168,54 +283,20 @@ class HttpAdapter:
         return response
 
     # def get_connection(self, url, proxies=None):
-        # """Returns a url connection for the given URL. 
-
-        # :param url: The URL to connect to.
-        # :param proxies: (optional) A Requests-style dictionary of proxies used on this request.
-        # :rtype: int
-        # """
-
-        # proxy = select_proxy(url, proxies)
-
-        # if proxy:
-            # proxy = prepend_scheme_if_needed(proxy, "http")
-            # proxy_url = parse_url(proxy)
-            # if not proxy_url.host:
-                # raise InvalidProxyURL(
-                    # "Please check proxy URL. It is malformed "
-                    # "and could be missing the host."
-                # )
-            # proxy_manager = self.proxy_manager_for(proxy)
-            # conn = proxy_manager.connection_from_url(url)
-        # else:
-            # # Only scheme should be lower case
-            # parsed = urlparse(url)
-            # url = parsed.geturl()
-            # conn = self.poolmanager.connection_from_url(url)
-
-        # return conn
+    # ... (phần code này không cần thiết cho bài tập)
 
 
     def add_headers(self, request):
         """
         Add headers to the request.
-
-        This method is intended to be overridden by subclasses to inject
-        custom headers. It does nothing by default.
-
-        
-        :param request: :class:`Request <Request>` to add headers to.
+        ...
         """
         pass
 
     def build_proxy_headers(self, proxy):
         """Returns a dictionary of the headers to add to any request sent
         through a proxy. 
-
-        :class:`HttpAdapter <HttpAdapter>`.
-
-        :param proxy: The url of the proxy being used for this request.
-        :rtype: dict
+        ...
         """
         headers = {}
         #
@@ -226,6 +307,13 @@ class HttpAdapter:
         username, password = ("user1", "password")
 
         if username:
-            headers["Proxy-Authorization"] = (username, password)
+            # <--- HOÀN THIỆN: Sửa logic dummy
+            # (Dù phần này có thể không dùng đến trong bài tập)
+            import base64
+            auth_str = f"{username}:{password}"
+            encoded_auth = base64.b64encode(auth_str.encode('utf-8')).decode('utf-8')
+            headers["Proxy-Authorization"] = f"Basic {encoded_auth}"
+            # <--- KẾT THÚC HOÀN THIỆN
 
         return headers
+    

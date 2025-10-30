@@ -1,21 +1,87 @@
-<!doctype html>
-<html>
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>bksysnet@hcmut welcome</title>
-
-    <meta charset="utf-8" />
-    <meta http-equiv="Content-type" content="text/html; charset=utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="stylesheet" href="css/styles.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P2P Chat - bksysnet@hcmut</title>
+    <link rel="stylesheet" href="css/chat.css">
 </head>
-
 <body>
-<div>
-    <h1>bksysnet@hcmut  Domain</h1>
-    <p>This domain is for use in illustrative examples in documents.
-    </p>
-  
-       <img src="images/welcome.png" alt="bksysnet at HCMUT" width="500" height="600">  
-</div>
+    <div class="chat-container">
+        <!-- Header -->
+        <header class="chat-header">
+            <div class="header-left">
+                <h1>💬 P2P Chat System</h1>
+                <span class="subtitle">bksysnet@hcmut</span>
+            </div>
+            <div class="header-right">
+                <span class="user-info" id="currentUser">Loading...</span>
+                <button onclick="logout()" class="btn-logout">Logout</button>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <div class="chat-main">
+            <!-- Sidebar - Peer List -->
+            <aside class="peer-sidebar">
+                <div class="sidebar-header">
+                    <h3>📋 Online Peers</h3>
+                    <button onclick="refreshPeers()" class="btn-refresh">🔄</button>
+                </div>
+                <ul id="peerList" class="peer-list">
+                    <li class="peer-loading">Loading peers...</li>
+                </ul>
+            </aside>
+
+            <!-- Chat Area -->
+            <main class="chat-area">
+                <div class="chat-welcome" id="chatWelcome">
+                    <h2>👋 Welcome to P2P Chat</h2>
+                    <p>Select a peer from the sidebar to start chatting</p>
+                    <div class="welcome-features">
+                        <div class="feature">
+                            <span class="icon">🔒</span>
+                            <span>Secure Authentication</span>
+                        </div>
+                        <div class="feature">
+                            <span class="icon">⚡</span>
+                            <span>Real-time Messaging</span>
+                        </div>
+                        <div class="feature">
+                            <span class="icon">👥</span>
+                            <span>Peer-to-Peer</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="chat-active" id="chatActive" style="display: none;">
+                    <div class="chat-header-sub">
+                        <h3>Chat with: <span id="activePeer">-</span></h3>
+                    </div>
+                    
+                    <div class="messages-container" id="messagesContainer">
+                        <!-- Messages will be appended here -->
+                    </div>
+
+                    <div class="message-input-container">
+                        <input 
+                            type="text" 
+                            id="messageInput" 
+                            placeholder="Type your message..." 
+                            onkeypress="handleKeyPress(event)"
+                        >
+                        <button onclick="sendMessage()" class="btn-send">Send</button>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Footer -->
+        <footer class="chat-footer">
+            <p>&copy; 2025 HCMUT - CO3094 Network Lab | Task 1 & 2 Implementation</p>
+        </footer>
+    </div>
+
+    <script src="js/chat.js"></script>
 </body>
 </html>

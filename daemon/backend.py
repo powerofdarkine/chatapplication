@@ -58,10 +58,15 @@ def handle_client(ip, port, conn, addr, routes):
     :param addr (tuple): client address (IP, port).
     :param routes (dict): Dictionary of route handlers.
     """
-    daemon = HttpAdapter(ip, port, conn, addr, routes)
+    try: # <--- CẢI TIẾN: Thêm try/finally để đảm bảo socket luôn được đóng
+        daemon = HttpAdapter(ip, port, conn, addr, routes)
 
-    # Handle client
-    daemon.handle_client(conn, addr, routes)
+        # Handle client
+        daemon.handle_client(conn, addr, routes)
+    except Exception as e:
+        print(f"[Backend] Error handling client {addr}: {e}")
+    finally:
+        conn.close()
 
 def run_backend(ip, port, routes):
     """
@@ -75,6 +80,7 @@ def run_backend(ip, port, routes):
     :param routes (dict): Dictionary of route handlers.
     """
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     try:
         server.bind((ip, port))
@@ -85,13 +91,26 @@ def run_backend(ip, port, routes):
 
         while True:
             conn, addr = server.accept()
+            print(f"[Backend] Accepted connection from {addr}")
             #
             #  TODO: implement the step of the client incomping connection
             #        using multi-thread programming with the
             #        provided handle_client routine
             #
+            client_thread = threading.Thread(
+                target=handle_client,
+                args=(ip, port, conn, addr, routes)
+            )
+            # Ghi chú của file yêu cầu tạo daemon threads [cite: 419]
+            client_thread.daemon = True 
+            client_thread.start()
     except socket.error as e:
       print("Socket error: {}".format(e))
+    except KeyboardInterrupt:
+        print("\n[Backend] Server shutting down.")
+    finally:
+        # <--- CẢI TIẾN: Đảm bảo server socket luôn được đóng
+        server.close()
 
 def create_backend(ip, port, routes={}):
     """

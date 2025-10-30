@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Failed</title>
+    <link rel="stylesheet" href="css/login.css">
+    <style>
+        .error-box {
+            background: #fee;
+            border: 2px solid #c33;
+            color: #c33;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>❌ Login Failed</h1>
+        </div>
+        
+        <div class="error-box">
+            <strong>401 Unauthorized</strong><br>
+            Invalid username or password. Please try again.
+        </div>
+        
+        <a href="/login.html" class="btn-login" style="text-align: center; text-decoration: none; display: block;">
+            ← Back to Login
+        </a>
+    </div>
+</body>
+</html>

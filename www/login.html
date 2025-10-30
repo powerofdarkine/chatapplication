@@ -1,8 +1,44 @@
-<html><body>
-<h1>Login</h1>
-<form method="POST" action="/login">
-  Username: <input name="username" type="text"><br>
-  Password: <input name="password" type="password"><br>
-  <input type="submit" value="Login">
-</form>
-</body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - bksysnet@hcmut</title>
+    <link rel="stylesheet" href="css/login.css">
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <h1>🔐 bksysnet@hcmut</h1>
+            <p>Secure Authentication System</p>
+        </div>
+        
+        <form method="POST" action="/login" class="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autofocus placeholder="Enter username">
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required placeholder="Enter password">
+            </div>
+            
+            <button type="submit" class="btn-login">Login</button>
+            
+            <div class="login-info">
+                <p><small>💡 Default credentials:</small></p>
+                <ul>
+                    <li><code>admin</code> / <code>password</code></li>
+                    <li><code>user1</code> / <code>pass123</code></li>
+                    <li><code>user2</code> / <code>pass456</code></li>
+                </ul>
+            </div>
+        </form>
+        
+        <div class="login-footer">
+            <p>&copy; 2025 HCMUT - CO3094 Network Lab</p>
+        </div>
+    </div>
+</body>
+</html>
