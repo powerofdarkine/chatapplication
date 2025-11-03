@@ -17,12 +17,38 @@ daemon.request
 This module provides a Request object to manage and persist 
 request settings (cookies, auth, proxies).
 """
+
+from __future__ import annotations
+
+from typing import Dict, Iterable, Optional, Tuple
+
 from .dictionary import CaseInsensitiveDict
 
-class Request():
-    """The fully mutable "class" `Request <Request>` object,
-    ...
+
+class Request:
+    """Server-side HTTP request container and parser.
+
+    Summary:
+        Parses an incoming raw HTTP/1.x request into method, path, version,
+        headers, cookies, and body. Supports mapping to a route hook
+        (function) via a provided routes table.
+
+    Attributes:
+        method (Optional[str]): HTTP method, e.g. "GET".
+        url (Optional[str]): Unused for server parsing; kept for compatibility.
+        path (Optional[str]): Request target path, e.g. "/index.html".
+        version (Optional[str]): HTTP version string, e.g. "HTTP/1.1".
+        headers (CaseInsensitiveDict): Parsed headers (case-insensitive keys).
+        cookies (dict[str, str]): Parsed cookies from the Cookie header.
+        body (str): Request body as text (raw bytes decoded as ISO-8859-1).
+        routes (dict): Route table keyed by (METHOD, PATH) -> hook function.
+        hook (Optional[callable]): Selected hook function, if any.
+
+    Notes:
+        - For server parsing, decoding request bytes as ISO-8859-1 is safe per
+          RFC 7230 for header octets. Application code may re-decode body.
     """
+
     __attrs__ = [
         "method",
         "url",
@@ -30,147 +56,179 @@ class Request():
         "body",
         "reason",
         "cookies",
-        "body",
         "routes",
         "hook",
+        "path",
+        "version",
     ]
 
-    def __init__(self):
-        #: HTTP verb to send to the server.
-        self.method = None
-        #: HTTP URL to send the request to.
-        self.url = None
-        #: dictionary of HTTP headers.
-        # <--- HOÀN THIỆN: Khởi tạo là CaseInsensitiveDict
-        self.headers = CaseInsensitiveDict() 
-        #: HTTP path
-        self.path = None        
-        # The cookies set used to create Cookie header
-        self.cookies = {} # <--- HOÀN THIỆN: Khởi tạo là dict
-        #: request body to send to the server.
-        self.body = None
-        #: Routes
-        self.routes = {}
-        #: Hook point for routed mapped-path
+    def __init__(self) -> None:
+        """Initialize an empty Request."""
+        self.method: Optional[str] = None
+        self.url: Optional[str] = None  # not used by server; kept for parity
+        self.path: Optional[str] = None
+        self.version: Optional[str] = None
+
+        # Case-insensitive header map for convenient lookups.
+        self.headers: CaseInsensitiveDict = CaseInsensitiveDict()
+
+        # Parsed cookie key/value pairs.
+        self.cookies: Dict[str, str] = {}
+
+        # Raw body as text (decoded ISO-8859-1). Routes can re-decode as needed.
+        self.body: str = ""
+
+        # Routing context
+        self.routes: Dict = {}
         self.hook = None
 
-    def extract_request_line(self, first_line):
-        """
-        Parses the first line of an HTTP request.
-        :param first_line (str): The raw request line (e.g., "GET /path HTTP/1.1")
+    # ---------------------------------------------------------------------
+    # Parsing helpers
+    # ---------------------------------------------------------------------
+
+    def extract_request_line(self, first_line: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
+        """Parse the start-line: METHOD SP REQUEST-TARGET SP HTTP-VERSION.
+
+        Inputs:
+            - first_line (str): e.g., "GET /path HTTP/1.1"
+
+        Outputs:
+            - (method, path, version) or (None, None, None) on error.
         """
         try:
-            # <--- HOÀN THIỆN: Sửa logic để chỉ xử lý 1 dòng
-            method, path, version = first_line.split()
+            # Ensure we only consider a single line
+            first_line = first_line.strip("\r\n")
+            parts = first_line.split()
+            if len(parts) != 3:
+                raise ValueError("Malformed request line")
 
-            if path == '/':
-                path = '/index.html' # Mặc định trỏ / về index.html
-            
+            method, path, version = parts[0], parts[1], parts[2]
+
+            # Default route for "/"
+            if path == "/":
+                path = "/index.html"
+
             return method, path, version
-        except Exception as e:
-            print(f"[Request] Error parsing request line '{first_line}': {e}")
+        except Exception as exc:
+            print(f"[Request] Error parsing request line '{first_line}': {exc}")
             return None, None, None
-            
-    def prepare_headers(self, header_lines_list):
+
+    def prepare_headers(self, header_lines_list: Iterable[str]) -> CaseInsensitiveDict:
+        """Parse header lines into a CaseInsensitiveDict.
+
+        Inputs:
+            - header_lines_list (Iterable[str]): raw header lines (without CRLFCRLF).
+
+        Outputs:
+            - CaseInsensitiveDict of headers.
         """
-        Prepares the given HTTP headers from a list of strings.
-        :param header_lines_list (list): A list of raw header strings.
-        """
-        headers = CaseInsensitiveDict() # <--- HOÀN THIỆN
-        
-        # <--- HOÀN THIỆN: Sửa logic để xử lý một list các dòng header
-        for line in header_lines_list:
-            if ': ' in line:
-                key, val = line.split(': ', 1)
-                headers[key] = val # Tự động là case-insensitive
+        headers = CaseInsensitiveDict()
+        for raw in header_lines_list:
+            line = raw.strip("\r\n")
+            if not line:
+                continue
+            # Only split on the first ":" to support values containing ":".
+            if ":" in line:
+                key, val = line.split(":", 1)
+                headers[key.strip()] = val.lstrip()  # keep leading spaces in value trimmed
         return headers
 
-    def prepare(self, request, routes=None):
-        """Prepares the entire request with the given parameters."""
+    # ---------------------------------------------------------------------
+    # Main entry: parse the raw request string into fields
+    # ---------------------------------------------------------------------
 
-        # <--- HOÀN THIỆN: Viết lại toàn bộ logic phân tích (parsing)
-        
-        # 1. Tách Header Block và Body
-        # Dấu hiệu kết thúc header là 2 lần xuống dòng
-        try:
-            header_block, self.body = request.split('\r\n\r\n', 1)
-        except ValueError:
-            # Nếu không có body, gán body là chuỗi rỗng
-            header_block = request
-            self.body = ""
+    def prepare(self, request: str, routes: Optional[Dict] = None) -> None:
+        """Parse a raw HTTP/1.x request into this Request instance.
 
-        # 2. Tách Request Line và các Header
+        Inputs:
+            - request (str): raw request text. If the original was bytes,
+              decode using ISO-8859-1 before calling this method.
+            - routes (dict|None): optional routing table keyed by (METHOD, PATH).
+
+        Side-effects:
+            - Populates method/path/version/headers/cookies/body.
+            - If routes are provided, sets 'hook' to the matched function.
+        """
+        # 1) Split header block and body by the first blank line.
+        header_block, body = self._split_headers_body(request)
+        self.body = body
+
+        # 2) Split request line and header lines.
         header_lines = header_block.splitlines()
-        first_line = header_lines[0]
-        other_header_lines = header_lines[1:] # Các dòng header thực sự
+        if not header_lines:
+            print("[Request] Empty header block.")
+            return
 
-        # 3. Phân tích Request Line
+        first_line = header_lines[0]
+        other_header_lines = header_lines[1:]
+
+        # 3) Parse request line.
         self.method, self.path, self.version = self.extract_request_line(first_line)
-        if not self.method:
+        if not self.method or not self.path or not self.version:
             print("[Request] Could not parse request line. Aborting.")
             return
 
-        print("[Request] {} path {} version {}".format(self.method, self.path, self.version))
+        print(f"[Request] {self.method} path {self.path} version {self.version}")
 
-        # 4. Phân tích Headers
+        # 4) Parse headers.
         self.headers = self.prepare_headers(other_header_lines)
-        
-        # 5. Phân tích Cookies (TODO)
-        cookie_string = self.headers.get('Cookie') # Dùng .get() để tránh lỗi
+
+        # 5) Parse cookies.
+        cookie_string = self.headers.get("Cookie")
         if cookie_string:
-            for pair in cookie_string.split(';'):
-                pair = pair.strip()
-                if '=' in pair:
-                    key, val = pair.split('=', 1) # Tách ở dấu = đầu tiên
-                    self.cookies[key] = val
-        
-        # 6. Tìm Hook (TODO)
-        # @bksysnet Preapring the webapp hook with WeApRous instance
-        # The default behaviour with HTTP server is empty routed
-        #
-        if routes: # routes không rỗng (tức là đang chạy WeApRous)
+            for pair in cookie_string.split(";"):
+                part = pair.strip()
+                if "=" in part:
+                    key, val = part.split("=", 1)
+                    self.cookies[key.strip()] = val.strip()
+
+        # 6) Route hook (if routes provided).
+        if routes:
             self.routes = routes
-            # Tìm hook dựa trên (METHOD, PATH)
             self.hook = routes.get((self.method, self.path))
-            #
-            # self.hook manipulation goes here
-            # (Không cần làm gì thêm, self.hook giờ đã là
-            #  hàm 'login' hoặc 'hello' trong start_sampleapp.py)
-            #
-        # --- KẾT THÚC HOÀN THIỆN ---
 
-        return
+    # ---------------------------------------------------------------------
+    # Legacy placeholders kept for compatibility with existing imports
+    # ---------------------------------------------------------------------
 
-    # --- Các hàm bên dưới dường như là "di sản" (artifact) ---
-    # --- từ một thư viện client (như 'requests') và không   ---
-    # --- thực sự cần thiết cho việc *parsing* một request   ---
-    # --- của server. Chúng ta có thể bỏ qua các TODO ở đây. ---
-    
     def prepare_body(self, data, files, json=None):
-        # self.prepare_content_length(self.body)
-        # self.body = body # Biến body không được định nghĩa
-        #
-        # TODO prepare the request authentication
-        #
-    # self.auth = ...
+        """Compatibility placeholder: server-side parser does not build bodies."""
         return
-
 
     def prepare_content_length(self, body):
-        # self.headers["Content-Length"] = "0"
-        #
-        # TODO prepare the request authentication
-        #
-    # self.auth = ...
+        """Compatibility placeholder: content-length is handled by response builder."""
         return
-
 
     def prepare_auth(self, auth, url=""):
-        #
-        # TODO prepare the request authentication
-        #
-    # self.auth = ...
+        """Compatibility placeholder: auth handled by higher-level logic."""
         return
 
-    def prepare_cookies(self, cookies):
-            self.headers["Cookie"] = cookies
+    def prepare_cookies(self, cookies: str) -> None:
+        """Set raw Cookie header value (server-side, rarely needed)."""
+        self.headers["Cookie"] = cookies
+
+    # ---------------------------------------------------------------------
+    # Internal utilities
+    # ---------------------------------------------------------------------
+
+    @staticmethod
+    def _split_headers_body(raw: str) -> Tuple[str, str]:
+        """Split raw request into (header_block, body) with tolerant line ending.
+
+        Inputs:
+            - raw (str): full request text.
+
+        Outputs:
+            - (header_block, body) where body may be "" if none present.
+        """
+        # Prefer CRLF separator, fall back to LF-only if needed.
+        sep = "\r\n\r\n"
+        if sep in raw:
+            parts = raw.split(sep, 1)
+            return parts[0], parts[1]
+        sep_lf = "\n\n"
+        if sep_lf in raw:
+            parts = raw.split(sep_lf, 1)
+            return parts[0], parts[1]
+        # No body present
+        return raw, ""
