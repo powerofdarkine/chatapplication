@@ -11,7 +11,7 @@
         <!-- Header -->
         <header class="chat-header">
             <div class="header-left">
-                <h1>💬 P2P Chat System</h1>
+                <h1> P2P Chat System</h1>
                 <span class="subtitle">bksysnet@hcmut</span>
             </div>
             <div class="header-right">
@@ -25,30 +25,30 @@
             <!-- Sidebar - Peer List -->
             <aside class="peer-sidebar">
                 <div class="sidebar-header">
-                    <h3>📋 Online Peers</h3>
-                    <button onclick="refreshPeers()" class="btn-refresh">🔄</button>
+                    <h3>Online Peers <span id="peerCount" style="color: #667eea;">(0)</span></h3>
+                    <button onclick="refreshPeers()" class="btn-refresh" title="Refresh peer list">🔄</button>
                 </div>
                 <ul id="peerList" class="peer-list">
                     <li class="peer-loading">Loading peers...</li>
                 </ul>
+                <div style="padding: 10px; font-size: 11px; color: #999; border-top: 1px solid #e0e0e0;">
+                    <div id="p2pStatus">P2P Status: Initializing...</div>
+                </div>
             </aside>
 
             <!-- Chat Area -->
             <main class="chat-area">
                 <div class="chat-welcome" id="chatWelcome">
-                    <h2>👋 Welcome to P2P Chat</h2>
+                    <h2>Welcome to P2P Chat</h2>
                     <p>Select a peer from the sidebar to start chatting</p>
                     <div class="welcome-features">
                         <div class="feature">
-                            <span class="icon">🔒</span>
                             <span>Secure Authentication</span>
                         </div>
                         <div class="feature">
-                            <span class="icon">⚡</span>
                             <span>Real-time Messaging</span>
                         </div>
                         <div class="feature">
-                            <span class="icon">👥</span>
                             <span>Peer-to-Peer</span>
                         </div>
                     </div>
@@ -56,7 +56,15 @@
 
                 <div class="chat-active" id="chatActive" style="display: none;">
                     <div class="chat-header-sub">
-                        <h3>Chat with: <span id="activePeer">-</span></h3>
+                        <h3>
+                            Chat with: <span id="activePeer">-</span>
+                            <span id="connectionStatus" style="font-size: 12px; margin-left: 10px; color: #999;">
+                                (Not connected)
+                            </span>
+                        </h3>
+                        <button id="endSessionBtn" onclick="endChat()" class="btn-logout" style="background: #dc3545; float: right; margin-top: -30px;">
+                            End Session
+                        </button>
                     </div>
                     
                     <div class="messages-container" id="messagesContainer">
@@ -70,7 +78,7 @@
                             placeholder="Type your message..." 
                             onkeypress="handleKeyPress(event)"
                         >
-                        <button onclick="sendMessage()" class="btn-send">Send</button>
+                        <button onclick="sendMessage()" class="btn-send" id="sendBtn">Send</button>
                     </div>
                 </div>
             </main>
@@ -80,6 +88,18 @@
         <footer class="chat-footer">
             <p>&copy; 2025 HCMUT - CO3094 Network Lab | Task 1 & 2 Implementation</p>
         </footer>
+    </div>
+
+    <!-- Connection Request Modal -->
+    <div id="connectionRequestModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3>Connection Request</h3>
+            <p id="connectionRequestMessage"></p>
+            <div class="modal-buttons">
+                <button id="acceptRequestBtn" class="btn-accept">Accept</button>
+                <button id="rejectRequestBtn" class="btn-reject">Reject</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/chat.js"></script>
