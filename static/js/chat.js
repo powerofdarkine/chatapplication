@@ -30,7 +30,7 @@ async function loadCurrentUser() {
         if (response.ok) {
             const data = await response.json();
             currentUser = data.username;
-            document.getElementById('currentUser').textContent = `👤 ${currentUser}`;
+            document.getElementById('currentUser').textContent = `User: ${currentUser}`;
             
             console.log('[Chat] Logged in as:', currentUser);
             
@@ -74,7 +74,7 @@ async function registerP2P() {
             
             // Update status
             document.getElementById('p2pStatus').innerHTML = 
-                `P2P: <span style="color: #28a745;">●</span> Port ${data.p2p_port}`;
+                `P2P: <span style="color: #28a745;">ONLINE</span> Port ${data.p2p_port}`;
         } else {
             console.error('[Chat] Failed to register P2P');
         }
@@ -122,7 +122,7 @@ function renderPeerList() {
                         ${peer.display_name}
                         ${isConnected ? '<span class="badge">Connected</span>' : ''}
                     </div>
-                    <div class="peer-status ${statusClass}">● ${peer.status}</div>
+                    <div class="peer-status ${statusClass}">${peer.status}</div>
                 </div>
             </li>
         `;
@@ -884,7 +884,7 @@ async function updateP2PStatus() {
                 const connectionCount = data.active_connections ? data.active_connections.length : 0;
                 
                 statusEl.innerHTML = 
-                    `P2P: <span style="color: #28a745;">●</span> Port ${data.port} | ${connectionCount} active`;
+                    `P2P: <span style="color: #28a745;">ONLINE</span> Port ${data.port} | ${connectionCount} active`;
                 
                 // Check for new connections
                 const oldConnected = new Set(connectedPeers);
@@ -925,7 +925,7 @@ function onConnectionEstablished(peerId) {
         inputEl.placeholder = 'Type your message...';
         inputEl.focus();
         
-        appendSystemMessage(`✅ P2P connection established with ${peerId}`);
+        appendSystemMessage(`P2P connection established with ${peerId}`);
         playNotificationSound();
     }
 }
