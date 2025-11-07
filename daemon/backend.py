@@ -58,7 +58,7 @@ def handle_client(ip, port, conn, addr, routes):
     :param addr (tuple): client address (IP, port).
     :param routes (dict): Dictionary of route handlers.
     """
-    try: # <--- CẢI TIẾN: Thêm try/finally để đảm bảo socket luôn được đóng
+    try:
         daemon = HttpAdapter(ip, port, conn, addr, routes)
 
         # Handle client
@@ -101,7 +101,6 @@ def run_backend(ip, port, routes):
                 target=handle_client,
                 args=(ip, port, conn, addr, routes)
             )
-            # Ghi chú của file yêu cầu tạo daemon threads [cite: 419]
             client_thread.daemon = True 
             client_thread.start()
     except socket.error as e:
@@ -109,7 +108,6 @@ def run_backend(ip, port, routes):
     except KeyboardInterrupt:
         print("\n[Backend] Server shutting down.")
     finally:
-        # <--- CẢI TIẾN: Đảm bảo server socket luôn được đóng
         server.close()
 
 def create_backend(ip, port, routes={}):

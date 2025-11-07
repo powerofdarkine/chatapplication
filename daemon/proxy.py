@@ -27,282 +27,269 @@ Requirement:
 - dictionary: :class: `CaseInsensitiveDict <CaseInsensitiveDict>` for managing headers and cookies.
 
 """
+
+from __future__ import annotations
+
 import socket
 import threading
-from .response import *
+from typing import Dict, Iterable, Optional, Tuple
+
+from daemon.response import Response
+
 from .httpadapter import HttpAdapter
 from .dictionary import CaseInsensitiveDict
 
-# <--- HOÀN THIỆN: Thêm các lock để xử lý Round Robin thread-safe --->
-# Lock để bảo vệ khi thêm một host mới vào `round_robin_locks`
-round_robin_global_lock = threading.Lock()
-# Dictionary chứa các lock riêng cho từng host, để bảo vệ index của host đó
-round_robin_locks = {}
-# Dictionary chứa index hiện tại của từng host
-round_robin_indices = {}
-# <--- KẾT THÚC HOÀN THIỆN --->
+# ----------------------------
+# Round-robin state (thread-safe)
+# ----------------------------
+
+_round_robin_global_lock = threading.Lock()
+_round_robin_locks: Dict[str, threading.Lock] = {}
+_round_robin_indices: Dict[str, int] = {}
 
 
-def forward_request(host, port, request):
+def _normalize_host_for_key(host_header: str) -> str:
+    """Normalize Host header to a dict key (lowercase, strip port)."""
+    return host_header.split(":", 1)[0].lower().strip()
+
+
+# ----------------------------
+# Backend forwarding
+# ----------------------------
+
+def forward_request(host: str, port: int, request: str) -> bytes:
+    """Forward a raw HTTP request to a backend and return raw HTTP response bytes.
+
+    Inputs:
+        - host (str): backend IP/hostname.
+        - port (int): backend TCP port.
+        - request (str): full HTTP request (headers + CRLFCRLF + optional body).
+
+    Outputs:
+        - bytes: raw HTTP response from backend.
     """
-    Forwards an HTTP request to a backend server and retrieves the response.
-
-    :params host (str): IP address of the backend server.
-    :params port (int): port number of the backend server.
-    :params request (str): incoming HTTP request.
-
-    :rtype bytes: Raw HTTP response from the backend server. If the connection
-                    fails, returns a 404 Not Found response.
-    """
-
     backend = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    backend.settimeout(5.0) # <--- CẢI TIẾN: Thêm timeout để tránh bị treo
-
+    backend.settimeout(5.0)
     try:
         backend.connect((host, port))
-        backend.sendall(request.encode('utf-8')) # <--- HOÀN THIỆN: Chỉ định encoding
-        response = b""
+        backend.sendall(request.encode("utf-8"))
+        chunks: list[bytes] = []
         while True:
             chunk = backend.recv(4096)
             if not chunk:
                 break
-            response += chunk
-        return response
-    except socket.error as e:
-        print(f"Socket error forwarding to {host}:{port}: {e}")
-        return (
-            "HTTP/1.1 502 Bad Gateway\r\n" # 502 thì đúng hơn 404
-            "Content-Type: text/plain\r\n"
-            "Content-Length: 15\r\n"
-            "Connection: close\r\n"
-            "\r\n"
-            "502 Bad Gateway"
-        ).encode('utf-8')
+            chunks.append(chunk)
+        return b"".join(chunks)
+    except socket.error as exc:
+        print(f"[Proxy] Backend {host}:{port} socket error: {exc}")
+        return Response.bad_gateway().build_response_bytes()
     finally:
-        backend.close() # <--- HOÀN THIỆN: Luôn đóng socket
+        try:
+            backend.close()
+        except Exception:
+            pass
 
 
-def resolve_routing_policy(hostname, routes):
+# ----------------------------
+# Routing / policy resolution
+# ----------------------------
+
+def resolve_routing_policy(hostname: str, routes: Dict) -> Tuple[Optional[str], Optional[int]]:
+    """Resolve (host, port) for a given HTTP Host header using routes and policy.
+
+    Inputs:
+        - hostname (str): value from Host header (may include port).
+        - routes (dict): per-host config like:
+            routes = {
+              "app.local": {
+                 "backends": ["127.0.0.1:9001", "127.0.0.1:9002"],
+                 "policy": "round-robin",
+                 "headers": {"Host": "$host"}
+              },
+              ...
+            }
+
+    Outputs:
+        - (host, port) or (None, None) if not found/invalid.
     """
-    Handles an routing policy to return the matching proxy_pass.
-    It determines the target backend to forward the request to.
-
-    :params hostname (str): IP address of the request target server.
-    :params routes (dict): dictionary mapping hostnames and location.
-    
-    :rtype tuple: (host, port) or (None, None) if not found
-    """
-
-    # <--- BẮT ĐẦU TÍCH HỢP LOGIC CỦA BẠN ---
-    
-    # Thử 1: Tìm chính xác (không phân biệt hoa thường)
-    # Ví dụ: Host header là 'app2.local', config key là 'app2.local'
+    # Exact match
     route_info = routes.get(hostname.lower())
 
-    # Thử 2: Nếu không thấy, thử tìm 'app2.local' khi Host header là 'app2.local:8080'
+    # Try without client-sent port
     if route_info is None:
-        host_only = hostname.split(':', 1)[0].lower()
-        
-        # Thử tìm chính xác 'host_only' (ví dụ: 'app2.local')
+        host_only = _normalize_host_for_key(hostname)
         route_info = routes.get(host_only)
 
-        # Thử 3: Nếu vẫn không thấy, dùng logic "fuzzy" của bạn
-        # (để xử lý trường hợp config key là '192.168.56.103:8080')
+        # Fuzzy: compare host part of keys (ignore port)
         if route_info is None:
             for key, info in routes.items():
-                # So sánh phần host (đã bỏ port) của key trong config
-                # với phần host (đã bỏ port) của Host header
-                if key.lower().split(':', 1)[0] == host_only:
+                if _normalize_host_for_key(key) == host_only:
                     route_info = info
-                    print(f"[Proxy] Matched {hostname} to config key {key} (port-stripped)")
+                    print(f"[Proxy] Matched {hostname} to config key '{key}' (port-stripped)")
                     break
-    
-    # <--- KẾT THÚC TÍCH HỢP ---
 
-    # Trường hợp 1: Không tìm thấy host hoặc host không có backend
-    if not route_info or not route_info.get('backends'):
+    if not route_info or not route_info.get("backends"):
         print(f"[Proxy] No backends configured for hostname: {hostname}")
-        return (None, None)
+        return None, None
 
-    backends = route_info['backends']
-    policy = route_info['policy']
-    chosen_backend_str = ""
+    backends = route_info["backends"]
+    policy = route_info.get("policy", "first")
 
-    # Trường hợp 2: Chỉ có 1 backend, không cần policy
+    # Single backend: choose it
     if len(backends) == 1:
-        chosen_backend_str = backends[0]
-        
-    # Trường hợp 3: Có nhiều backend, áp dụng policy
-    elif policy == 'round-robin':
-        # --- Bắt đầu vùng critical (cần thread-safe) ---
-        
-        # Kiểm tra xem đã có lock cho host này chưa, nếu chưa thì tạo
-        with round_robin_global_lock:
-            if hostname not in round_robin_locks:
-                round_robin_locks[hostname] = threading.Lock()
-                round_robin_indices[hostname] = 0
-
-        # Dùng lock của riêng host này để lấy/cập nhật index
-        with round_robin_locks[hostname]:
-            current_index = round_robin_indices[hostname]
-            chosen_backend_str = backends[current_index]
-            
-            # Cập nhật index cho lần gọi tiếp theo
-            round_robin_indices[hostname] = (current_index + 1) % len(backends)
-        # --- Kết thúc vùng critical ---
-
-    # Trường hợp 4: Policy không được hỗ trợ hoặc mặc định
+        chosen = backends[0]
+    # Round-robin across multiple backends (thread-safe per host-key)
+    elif policy == "round-robin":
+        host_key = _normalize_host_for_key(hostname)
+        with _round_robin_global_lock:
+            if host_key not in _round_robin_locks:
+                _round_robin_locks[host_key] = threading.Lock()
+                _round_robin_indices[host_key] = 0
+        with _round_robin_locks[host_key]:
+            idx = _round_robin_indices[host_key]
+            chosen = backends[idx]
+            _round_robin_indices[host_key] = (idx + 1) % len(backends)
     else:
-        chosen_backend_str = backends[0] # Mặc định lấy cái đầu tiên
-        
-    # Tách host và port từ chuỗi backend
+        chosen = backends[0]
+
     try:
-        proxy_host, proxy_port_str = chosen_backend_str.split(":", 1)
-        proxy_port = int(proxy_port_str)
-        return (proxy_host, proxy_port)
+        proxy_host, proxy_port_str = chosen.split(":", 1)
+        return proxy_host.strip(), int(proxy_port_str.strip())
     except ValueError:
-        print(f"[Proxy] Invalid backend format: {chosen_backend_str}")
-        return (None, None)
+        print(f"[Proxy] Invalid backend format: {chosen}")
+        return None, None
 
-def handle_client(ip, port, conn, addr, routes):
-    """
-    Handles an individual client connection by parsing the request...
-    """
 
+# ----------------------------
+# Client handling
+# ----------------------------
+
+def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -> None:
+    """Handle a single client connection: read request, route, forward, return.
+
+    Inputs:
+        - ip (str): proxy bind IP (for logs only).
+        - port (int): proxy bind port (for logs only).
+        - conn (socket.socket): accepted client socket.
+        - addr: client address tuple.
+        - routes (dict): routing configuration.
+    """
     try:
-        # <--- CẢI TIẾN: Tăng buffer size và thêm timeout
         conn.settimeout(5.0)
-        request_bytes = conn.recv(8192) # 8KB buffer
+        request_bytes = conn.recv(8192)
         if not request_bytes:
-            conn.close()
             return
-            
-        request = request_bytes.decode('utf-8')
-        # <--- KẾT THÚC CẢI TIẾN
-        
-        hostname = None # <--- HOÀN THIỆN: Khởi tạo
-        
-        # Tách header và body
+
+        try:
+            request = request_bytes.decode("utf-8", errors="replace")
+        except Exception:
+            request = request_bytes.decode("iso-8859-1", errors="replace")
+
+        # Split headers/body
         try:
             header_part, body_part = request.split("\r\n\r\n", 1)
         except ValueError:
-            header_part = request
-            body_part = ""
+            header_part, body_part = request, ""
 
         header_lines = header_part.splitlines()
-        
-        # Extract hostname
+
+        # Extract Host header (HTTP/1.1 requires Host)
+        hostname: Optional[str] = None
         for line in header_lines:
-            if line.lower().startswith('host:'):
-                hostname = line.split(':', 1)[1].strip()
-                break # Tìm thấy là thoát
+            if line.lower().startswith("host:"):
+                hostname = line.split(":", 1)[1].strip()
+                break
 
         if not hostname:
-            print(f"[Proxy] {addr} sent request with no Host header. Closing.")
-            # HTTP/1.1 yêu cầu phải có Host header
-            response = (
-                "HTTP/1.1 400 Bad Request\r\n"
-                "Content-Length: 15\r\n\r\n"
-                "400 Bad Request"
-            ).encode('utf-8')
-            conn.sendall(response)
-            conn.close()
+            print(f"[Proxy] {addr} missing Host header")
+            conn.sendall(Response.bad_request().build_response_bytes())
             return
 
-        print(f"[Proxy] {addr} requesting Host: {hostname}")
+        print(f"[Proxy] {addr} Host: {hostname}")
 
-        # Resolve the matching destination
+        # Resolve backend
         resolved_host, resolved_port = resolve_routing_policy(hostname, routes)
 
-        # <--- HOÀN THIỆN: Xử lý 404 nếu không resolve được
-        if not resolved_host:
-            print(f"[Proxy] Host name {hostname} not recognized or configured.")
-            response = (
-                "HTTP/1.1 404 Not Found\r\n"
-                "Content-Type: text/plain\r\n"
-                "Content-Length: 13\r\n"
-                "Connection: close\r\n"
-                "\r\n"
-                "404 Not Found"
-            ).encode('utf-8')
-        
-        else:
-            print(f"[Proxy] Host {hostname} forwarded to {resolved_host}:{resolved_port}")
+        if not resolved_host or not resolved_port:
+            print(f"[Proxy] Unrecognized host: {hostname}")
+            conn.sendall(Response.not_found().build_response_bytes())
+            return
 
-            # <--- HOÀN THIỆN: Triển khai proxy_set_header
-            modified_request_lines = []
-            headers_to_set = routes.get(hostname, {}).get('headers', {})
-            host_header_value = None
+        print(f"[Proxy] Forwarding {addr} to {resolved_host}:{resolved_port}")
 
-            if 'Host' in headers_to_set and headers_to_set['Host'] == '$host':
-                host_header_value = hostname # $host nghĩa là hostname client request
+        # Optionally override/propagate headers from config
+        modified_header_lines = []
+        headers_to_set = routes.get(hostname, {}).get("headers", {})
+        # If config uses key without port, also check that entry
+        if not headers_to_set:
+            headers_to_set = routes.get(_normalize_host_for_key(hostname), {}).get("headers", {})
 
-            for line in header_lines:
-                # Nếu config yêu cầu set Host header, ta thay thế nó
-                if line.lower().startswith('host:') and host_header_value:
-                    modified_request_lines.append(f"Host: {host_header_value}")
-                else:
-                    modified_request_lines.append(line)
-            
-            # Ghép lại request đã chỉnh sửa
-            modified_header_part = "\r\n".join(modified_request_lines)
-            modified_request = modified_header_part + "\r\n\r\n" + body_part
-            # <--- KẾT THÚC HOÀN THIỆN HEADER
+        host_header_value: Optional[str] = None
+        if headers_to_set.get("Host") == "$host":
+            host_header_value = hostname
 
-            response = forward_request(resolved_host, resolved_port, modified_request)
-        
-        conn.sendall(response)
+        for line in header_lines:
+            if line.lower().startswith("host:") and host_header_value:
+                modified_header_lines.append(f"Host: {host_header_value}")
+            else:
+                modified_header_lines.append(line)
+
+        modified_request = "\r\n".join(modified_header_lines) + "\r\n\r\n" + body_part
+
+        # Forward and return response to client
+        backend_response = forward_request(resolved_host, resolved_port, modified_request)
+        conn.sendall(backend_response)
 
     except socket.timeout:
-        print(f"[Proxy] Connection timed out for {addr}")
-    except Exception as e:
-        print(f"[Proxy] Error handling client {addr}: {e}")
+        print(f"[Proxy] Timeout serving {addr}")
+    except Exception as exc:
+        print(f"[Proxy] Error serving {addr}: {exc}")
     finally:
-        conn.close()
+        try:
+            conn.close()
+        except Exception:
+            pass
 
 
-def run_proxy(ip, port, routes):
+# ----------------------------
+# Server bootstrap
+# ----------------------------
+
+def run_proxy(ip: str, port: int, routes: Dict) -> None:
+    """Run the proxy server loop (blocking).
+
+    Inputs:
+        - ip (str): bind IP (e.g., "127.0.0.1").
+        - port (int): bind port (e.g., 8080).
+        - routes (dict): routing configuration (see resolve_routing_policy doc).
     """
-    Starts the proxy server and listens for incoming connections. 
-    ...
-    """
-
     proxy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    proxy.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1) # <--- CẢI TIẾN
+    proxy.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
     try:
         proxy.bind((ip, port))
         proxy.listen(50)
-        print(f"[Proxy] Listening on IP {ip} port {port}")
+        print(f"[Proxy] Listening on {ip}:{port}")
+
         while True:
             conn, addr = proxy.accept()
-            print(f"[Proxy] Accepted connection from {addr}") # <--- Thêm log
-            
-            # <--- HOÀN THIỆN: Triển khai multi-thread
-            # 
-            # Dụng ý của giáo viên là dùng thread để xử lý đồng thời
-            # nhiều kết nối.
-            #
-            client_thread = threading.Thread(
+            print(f"[Proxy] Accepted {addr}")
+            t = threading.Thread(
                 target=handle_client,
-                args=(ip, port, conn, addr, routes)
+                args=(ip, port, conn, addr, routes),
+                daemon=True,
             )
-            client_thread.daemon = True # Tự động tắt thread khi chương trình chính tắt
-            client_thread.start()
-            # <--- KẾT THÚC HOÀN THIỆN
-            
-    except socket.error as e:
-        print(f"Socket error: {e}")
+            t.start()
+
+    except socket.error as exc:
+        print(f"[Proxy] Socket error: {exc}")
     finally:
-        proxy.close() # <--- HOÀN THIỆN: Đóng socket khi kết thúc
+        try:
+            proxy.close()
+        except Exception:
+            pass
 
-def create_proxy(ip, port, routes):
-    """
-    Entry point for launching the proxy server.
 
-    :params ip (str): IP address to bind the proxy server.
-    :params port (int): port number to listen on.
-    :params routes (dict): dictionary mapping hostnames and location.
-    """
-
+def create_proxy(ip: str, port: int, routes: Dict) -> None:
+    """Entry point for launching the proxy server."""
     run_proxy(ip, port, routes)

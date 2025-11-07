@@ -10,28 +10,25 @@
 # while attending the course
 #
 
-"""daemon.response
-===================
+"""
+daemon.response
+~~~~~~~~~~~~~~~~~
 
-Small HTTP response helper used by the lightweight HTTP server in this
-project. The :class:`Response` object models an HTTP response (status,
-headers, cookies and body), provides helpers for loading static files and
-content negotiation (MIME types), and builds raw HTTP response bytes that
-can be written to a socket.
+This module provides a :class: `Response <Response>` object to manage and persist 
+response settings (cookies, auth, proxies), and to construct HTTP responses
+based on incoming requests. 
 
-This module is intentionally minimal and synchronous — it is designed for
-teaching and lab usage where simplicity is preferred over feature completeness.
+The current version supports MIME type detection, content loading and header formatting
 """
 
 import datetime
 import mimetypes
 import os
-import json  # kept as used by some dynamic paths/hooks
-from typing import Optional
+from typing import Optional, Union
 
 from .dictionary import CaseInsensitiveDict
+from .cookies import make_set_cookie, Cookie
 
-# Project root directory (one level above the daemon/ package)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
@@ -78,19 +75,14 @@ class Response:
         Outputs:
             - Response instance with default fields.
         """
-        self._content: bytes | bool = False
-        self._content_consumed = False
-        self._has_dynamic_content = False
-
-        self.status_code: Optional[int] = None
-        self.headers: dict[str, str] = {}
-        self.url: Optional[str] = None
-        self.encoding: Optional[str] = None
-        self.history = []
-        self.reason: Optional[str] = None
-        self.cookies = CaseInsensitiveDict()
-        self.elapsed = datetime.timedelta(0)
         self.request = request
+        self.status_code: Optional[int] = None
+        self.reason: Optional[str] = None
+        self.headers = CaseInsensitiveDict()
+        self.cookies: CaseInsensitiveDict = CaseInsensitiveDict()
+        
+        self._content: Union[bytes, bool] = False
+        self._has_dynamic_content = False
 
     # ----------------------------
     # Dynamic content (route hooks)
@@ -112,48 +104,35 @@ class Response:
         """
         if not hook_data:
             return
-
-        if "status" in hook_data:
-            self.status_code = hook_data["status"]
-            status_map = {
-                200: "OK",
-                201: "Created",
-                204: "No Content",
-                301: "Moved Permanently",
-                302: "Found",
-                304: "Not Modified",
-                400: "Bad Request",
-                401: "Unauthorized",
-                403: "Forbidden",
-                404: "Not Found",
-                500: "Internal Server Error",
-                502: "Bad Gateway",
-                503: "Service Unavailable",
-            }
-            self.reason = status_map.get(self.status_code, "Unknown")
-
-        if "headers" in hook_data:
-            for key, value in hook_data["headers"].items():
-                self.headers[key] = value
-
-        if "cookies" in hook_data:
-            for name, value in hook_data["cookies"].items():
-                # value is a raw cookie string with attributes if any
-                self.cookies[name] = value
-
-        if "body" in hook_data:
-            body = hook_data["body"]
-            if isinstance(body, bytes):
-                self._content = body
-            elif isinstance(body, str):
-                self._content = body.encode("utf-8")
-            else:
-                self._content = str(body).encode("utf-8")
-        else:
-            # Empty body for status like 302, etc.
-            self._content = b""
-
+        
         self._has_dynamic_content = True
+        self.status_code = hook_data.get("status", self.status_code or 200)
+
+        for k, v in (hook_data.get("headers") or {}).items():
+            self.headers[k] = v
+
+        for name, val in (hook_data.get("Cookies") or {}).items():
+            if isinstance(val, Cookie):
+                self.cookies[name] = val
+            elif isinstance(val, dict):
+                self.cookies[name] = Cookie(
+                    name,
+                    val.get('value',''),
+                    val.get('path', '/'),
+                    val.get('max_age'), 
+                    val.get('httponly', True),
+                    val.get('secure', False))
+            else:
+                self.cookies[name] = Cookie(name, str(val))
+        
+        body = hook_data.get("body")
+
+        if isinstance(body, bytes):
+            self._content = body
+        elif isinstance(body, str):
+            self._content = body.encode("utf-8")
+        elif body is None:
+            pass
 
     def set_error(self, code: int, reason: str) -> None:
         """Set an error response.
@@ -169,7 +148,6 @@ class Response:
         self.reason = reason
         self._content = f"{code} {reason}".encode("utf-8")
         self.headers["Content-Type"] = "text/plain; charset=utf-8"
-        self._has_dynamic_content = True
 
     # ----------------------------
     # Static content helpers
@@ -289,6 +267,55 @@ class Response:
     # Response building
     # ----------------------------
 
+    def build_response_bytes(self) -> bytes:
+        status = self.status_code or 200
+        reason = self.reason or _reason_phrase_for(status)
+        body_bytes = self._content or b""
+        if "Content-Length" not in self.headers:
+            self.headers["Content-Length"] = str(len(body_bytes))
+        if "Connection" not in self.headers:
+            self.headers["Connection"] = "close"
+        
+        header_lines = [f"HTTP/1.1 {status} {reason}"]
+        
+        for k, v in self.headers.items():
+            header_lines.append(f"{k}: {v}")
+        for name, cookie_obj in self.cookies.items():
+            if isinstance(cookie_obj, Cookie):
+                header_lines.append(f"Set-Cookie: {cookie_obj.render_set_cookie()}")
+            else:
+                rendered = make_set_cookie(name, str(cookie_obj))
+                header_lines.append(f"Set-Cookie: {rendered}")
+        header_block = "\r\n".join(header_lines) + "\r\n\r\n"
+        return header_block.encode("utf-8") + (body_bytes or b"")
+
+    @classmethod
+    def simple(cls, status: int, reason: str, body_text: str = "", content_type: str = "text/plain; charset=utf-8"):
+        r = cls()
+        r.status_code = status
+        r.reason = reason
+        r.headers["Content-Type"] = content_type
+        r._content = body_text.encode("utf-8")
+        return r
+
+    @classmethod
+    def bad_request(cls, body_text: str = "400 Bad Request"):
+        return cls.simple(400, "Bad Request", body_text)
+    
+    @classmethod
+    def not_found(cls, body_text: str = "404 Not Found"):
+        return cls.simple(404, "Not Found", body_text)
+    
+    @classmethod
+    def bad_gateway(cls, body_text: str = "502 Bad Gateway"):
+        return cls.simple(502, "Bad Gateway", body_text)
+    
+    @classmethod
+    def redirect(cls, location: str, body_text: str = "<html><body>Redirect</body></html>"):
+        r = cls.simple(302, "Found", body_text, content_type="text/html; charset=utf-8")
+        r.headers["Location"] = location
+        return r
+
     def build_response_header(self, request=None) -> bytes:
         """Render HTTP/1.1 header block for current state.
 
@@ -302,11 +329,15 @@ class Response:
         status_line = f"HTTP/1.1 {self.status_code} {self.reason}\r\n"
         header_lines = [status_line]
 
-        for key, value in self.headers.items():
-            header_lines.append(f"{key}: {value}\r\n")
-
         for cookie_name, cookie_value in self.cookies.items():
-            header_lines.append(f"Set-Cookie: {cookie_name}={cookie_value}\r\n")
+            if cookie_value is None:
+                continue
+            if cookie_value.startswith(f"{cookie_name}=") or ("=" in cookie_value and cookie_value.split("=",1)[0] == cookie_name):
+                header_lines.append(f"Set-Cookie: {cookie_value}\r\n")
+            else:
+                # render using centralized formatter
+                rendered = make_set_cookie(cookie_name, cookie_value)
+                header_lines.append(f"Set-Cookie: {rendered}\r\n")
 
         content_length = len(self._content) if isinstance(self._content, (bytes, bytearray)) else 0
         header_lines.append(f"Content-Length: {content_length}\r\n")
@@ -431,11 +462,16 @@ class Response:
         Side-effects:
             - Adds/overwrites a raw cookie string into self.cookies.
         """
-        cookie_str = f"{name}={value}; Path={path}"
-        if max_age is not None:
-            cookie_str += f"; Max-Age={max_age}"
-        if httponly:
-            cookie_str += "; HttpOnly"
-        if secure:
-            cookie_str += "; Secure"
-        self.cookies[name] = cookie_str
+        self.cookies[name] = Cookie(name, value, path, max_age, httponly, secure)
+
+def _reason_phrase_for(code: int) -> str:
+    return {
+        200: "OK",
+        302: "Found",
+        400: "Bad Request",
+        401: "Unauthorized",
+        403: "Forbidden",
+        404: "Not Found",
+        500: "Internal Server Error",
+        502: "Bad Gateway",
+    }.get(code, "OK")

@@ -24,6 +24,8 @@ from typing import Dict, Iterable, Optional, Tuple
 
 from .dictionary import CaseInsensitiveDict
 
+from .cookies import parse_cookie_header
+
 
 class Request:
     """Server-side HTTP request container and parser.
@@ -174,13 +176,9 @@ class Request:
         self.headers = self.prepare_headers(other_header_lines)
 
         # 5) Parse cookies.
-        cookie_string = self.headers.get("Cookie")
+        cookie_string = self.headers.get('Cookie')
         if cookie_string:
-            for pair in cookie_string.split(";"):
-                part = pair.strip()
-                if "=" in part:
-                    key, val = part.split("=", 1)
-                    self.cookies[key.strip()] = val.strip()
+            self.cookies = parse_cookie_header(cookie_string)
 
         # 6) Route hook (if routes provided).
         if routes:

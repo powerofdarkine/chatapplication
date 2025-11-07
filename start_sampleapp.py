@@ -37,6 +37,7 @@ import argparse
 from daemon.weaprous import WeApRous
 from daemon.tracker import get_tracker
 from daemon.p2p_daemon import P2PDaemon
+from daemon.cookies import make_set_cookie, Cookie
 
 PORT = 9001  # Default port
 P2P_PORT_BASE = 9100  # Base port for P2P connections
@@ -108,8 +109,8 @@ def handle_login(headers, body, username=None):
                 'Content-Type': 'text/html; charset=utf-8'
             },
             'cookies': {
-                'auth': f"{auth_token}; Path=/; HttpOnly; Max-Age=3600",
-                'username': f"{username}; Path=/; Max-Age=3600"
+                'auth': Cookie('auth', auth_token, 3600, '/', True, False),
+                'username': Cookie('username', username, 3600, '/', False, False)
             },
             'body': '<html><body>Redirecting...</body></html>'
         }

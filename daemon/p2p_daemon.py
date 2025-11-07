@@ -1,11 +1,3 @@
-#
-# Copyright (C) 2025 pdnguyen of HCMC University of Technology VNU-HCM.
-# All rights reserved.
-# This file is part of the CO3093/CO3094 course.
-#
-# WeApRous release - P2P Daemon
-#
-
 """
 daemon.p2p_daemon
 ~~~~~~~~~~~~~~~~~
@@ -38,8 +30,6 @@ import threading
 import json
 import time
 import uuid
-from collections import defaultdict
-
 
 class P2PConnection:
     """Represents an active P2P connection."""
@@ -80,7 +70,7 @@ class P2PConnection:
 
 class P2PDaemon:
     """
-    P2P daemon manages incoming peer connections.
+    P2P manages incoming peer connections.
     Runs as a separate thread listening on a dedicated P2P port.
     """
     

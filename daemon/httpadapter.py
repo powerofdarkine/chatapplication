@@ -24,6 +24,7 @@ import base64
 from .request import Request
 from .response import Response
 from .dictionary import CaseInsensitiveDict
+from .cookies import parse_cookie_header
 
 class HttpAdapter:
     """
@@ -125,25 +126,20 @@ class HttpAdapter:
         # Response handler
         resp = self.response
 
-        try: # <--- HOÀN THIỆN: Thêm try...except để xử lý lỗi
+        try:
             
             # Handle the request
-            # <--- CẢI TIẾN: Tăng buffer size và kiểm tra kết nối rỗng
             msg_bytes = conn.recv(8192) # 8KB buffer
             if not msg_bytes:
                 print(f"[HttpAdapter] Connection from {addr} is empty. Closing.")
-                return # Client kết nối rồi ngắt ngay, backend.py sẽ đóng socket
+                return
                 
             msg = msg_bytes.decode('utf-8')
-            # <--- KẾT THÚC CẢI TIẾN
             
-            # Yêu cầu Request object phân tích msg thô
-            # (Hàm này phải tự parse headers, body, và tìm 'hook')
             req.prepare(msg, routes)
 
             PUBLIC_PATHS = ['/login', '/login.html', '/css/', '/js/', '/images/', '/favicon.ico']
 
-            # <--- HOÀN THIỆN TODO: Xử lý App hook
             # Handle request hook
             needs_auth = True
             for public_path in PUBLIC_PATHS:
@@ -186,8 +182,6 @@ class HttpAdapter:
             if req.hook:
                 print(f"[HttpAdapter] hook in route-path METHOD {req.method} PATH {req.path}")
                 
-                # Gọi hook (hàm trong start_sampleapp.py) 
-                # với dữ liệu THỰC TẾ từ request
                 try:
                     hook_response_data = req.hook(
                         headers=req.headers, 
@@ -195,11 +189,9 @@ class HttpAdapter:
                         username = getattr(req, 'username', None)
                     )
                     
-                    # Báo cho Response object biết có dữ liệu động
                     if isinstance(hook_response_data, dict):
                         resp.set_dynamic_content(hook_response_data)
                     else:
-                        # Fallback: nếu hook trả về string/bytes
                         resp._content = str(hook_response_data).encode('utf-8') if isinstance(hook_response_data, str) else hook_response_data
                 
                 except Exception as e:
@@ -208,28 +200,13 @@ class HttpAdapter:
                     traceback.print_exc()
                     resp.set_error(500, "Server Error")
             
-            # <--- KẾT THÚC HOÀN THIỆN TODO
-            
-            # Build response
-            # Hàm này trong response.py sẽ tự biết:
-            # 1. Ưu tiên trả về lỗi (nếu có)
-            # 2. Ưu tiên trả về dữ liệu hook (nếu có)
-            # 3. Cuối cùng mới tìm file tĩnh (static file)
             response = resp.build_response(req)
             
-            #print(response)
             conn.sendall(response)
-            
-            # <--- LỖI QUAN TRỌNG: ĐÃ XÓA conn.close()
-            # conn.close() # XÓA DÒNG NÀY!
-            # (File backend.py sẽ tự động đóng kết nối)
             
         except Exception as e:
             print(f"[HttpAdapter] Error handling client {addr}: {e}")
-            # Đừng đóng conn ở đây, hãy để backend.py xử lý
 
-    # <--- HOÀN THIỆN: Sửa lỗi cú pháp của @property
-    # Đây không phải là @property, đây là một method.
     def extract_cookies(self, req):
         """
         Build cookies from the :class:`Request <Request>` headers.
@@ -237,32 +214,21 @@ class HttpAdapter:
         :param req:(Request) The :class:`Request <Request>` object.
         :rtype: cookies - A dictionary of cookie key-value pairs.
         """
-        cookies = {}
-        # Lấy header 'Cookie' từ request object
         cookie_header = req.headers.get('Cookie')
-        
-        if cookie_header:
-            for pair in cookie_header.split(";"):
-                try:
-                    # Tách key, value
-                    key, value = pair.strip().split("=", 1)
-                    cookies[key] = value
-                except ValueError:
-                    # Bỏ qua cookie bị lỗi (ví dụ: "mycookie" không có "=")
-                    pass
-        return cookies
-    # <--- KẾT THÚC HOÀN THIỆN
+        if not cookie_header:
+            return {}
+        return parse_cookie_header(cookie_header)
+    
+
 
     def build_response(self, req, resp):
-        """Builds a :class:`Response <Response>` object 
-        
-        <... Ghi chú: Phần code này có vẻ bị trùng lặp 
-         với logic của daemon/response.py và có thể không được 
-         gọi. Logic xử lý chính nằm trong handle_client ...>
         """
+        Builds a :class:`Response <Response>` object 
+        """
+        def get_encoding_from_headers(self, res):
+            return
         response = Response()
 
-        # Set encoding.
         response.encoding = get_encoding_from_headers(response.headers)
         response.raw = resp
         response.reason = response.raw.reason
@@ -272,19 +238,10 @@ class HttpAdapter:
         else:
             response.url = req.url
 
-        # Add new cookies from the server.
-        # <--- HOÀN THIỆN: Sửa lỗi gọi hàm
-        response.cookies = self.extract_cookies(req) # Phải gọi self.
-
-        # Give the Response some context.
         response.request = req
         response.connection = self
 
         return response
-
-    # def get_connection(self, url, proxies=None):
-    # ... (phần code này không cần thiết cho bài tập)
-
 
     def add_headers(self, request):
         """
@@ -307,13 +264,10 @@ class HttpAdapter:
         username, password = ("user1", "password")
 
         if username:
-            # <--- HOÀN THIỆN: Sửa logic dummy
-            # (Dù phần này có thể không dùng đến trong bài tập)
             import base64
             auth_str = f"{username}:{password}"
             encoded_auth = base64.b64encode(auth_str.encode('utf-8')).decode('utf-8')
             headers["Proxy-Authorization"] = f"Basic {encoded_auth}"
-            # <--- KẾT THÚC HOÀN THIỆN
 
         return headers
     
