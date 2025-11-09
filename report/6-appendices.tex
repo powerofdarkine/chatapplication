@@ -1,0 +1,616 @@
+\appendix
+\section{Selected Source Code Snippets}
+\label{appendix:code}
+
+This appendix provides selected code snippets from the project's source code, corresponding to the implementation details discussed in the main body of the report.
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.98,0.98,0.98}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+\subsection{Core P2P Logic (\texttt{p2p\_daemon.py})}
+\label{sec:appendix_p2p_daemon}
+
+\subsubsection{Message Loop and Protocol Handling}
+\label{subsec:appendix_message_loop}
+This snippet from the \texttt{\_message\_loop} and \texttt{\_handle\_message} methods illustrates the core P2P protocol logic. It shows the idle timeout detection using \texttt{socket.timeout} and the dispatching of \texttt{PING}, \texttt{PONG}, \texttt{CLOSE}, and \texttt{CHAT} messages, as discussed in Section 3.2.1.
+
+\begin{lstlisting}[language=Python, caption={P2P Message and Timeout Handling Logic}, label={lst:message_loop}]
+def _message_loop(self, p2p_conn):
+    """Read and process messages from a P2P connection."""
+    # ... setup ...
+    while self.running and not p2p_conn.closed:
+        try:
+            # Wait for data with a 1-second timeout
+            chunk = p2p_conn.conn.recv(4096)
+            # ... buffer processing ...
+            while '\n' in buffer:
+                line, buffer = buffer.split('\n', 1)
+                if line.strip():
+                    self._handle_message(p2p_conn, line.strip())
+        
+        except socket.timeout:
+            # Check for idle timeout (30 seconds)
+            if time.time() - p2p_conn.last_activity > self.IDLE_TIMEOUT:
+                print(f"[P2P] Idle timeout for '{p2p_conn.remote_peer_id}'")
+                break # Exit loop, close connection
+            continue # No data, just loop again
+        # ... error handling ...
+    # ... cleanup ...
+
+def _handle_message(self, p2p_conn, line):
+    """Handle incoming message line."""
+    try:
+        msg = json.loads(line)
+        msg_type = msg.get('type', 'UNKNOWN')
+        
+        if msg_type == 'PING':
+            # Respond with PONG to keep connection alive
+            self.send_message(p2p_conn.remote_peer_id, '', 'PONG')
+        
+        elif msg_type == 'PONG':
+            # Keepalive response received, do nothing
+            pass
+        
+        elif msg_type == 'CLOSE':
+            # Graceful close requested by peer
+            if self.on_message:
+                self.on_message(msg.get('from'), msg.get('to'), msg)
+            p2p_conn.closed = True # Mark connection for closure
+        
+        elif msg_type == 'CHAT':
+            # Forward chat message to the application layer (HTTP bridge)
+            if self.on_message:
+                self.on_message(msg.get('from'), msg.get('to'), msg)
+    # ... error handling ...
+\end{lstlisting}
+
+\subsubsection{Concurrency and Handshake Logic}
+\label{subsec:appendix_concurrency}
+The \texttt{\_accept\_loop} function (Listing \ref{lst:accept_loop}) demonstrates the concurrent server design, where each incoming connection is handled in a new thread. The \texttt{\_handle\_incoming\_connection} function (Listing \ref{lst:handshake}) shows the server-side P2P handshake protocol.
+
+\begin{lstlisting}[language=Python, caption={Accepting and Handling New Connections}, label={lst:accept_loop}]
+def _accept_loop(self):
+    """Accept incoming connections."""
+    while self.running:
+        try:
+            self.server_socket.settimeout(1.0)
+            conn, addr = self.server_socket.accept()
+            
+            print(f"[P2P] Incoming connection from {addr}")
+            
+            # Handle in separate thread to not block the accept loop
+            thread = threading.Thread(
+                target=self._handle_incoming_connection,
+                args=(conn, addr),
+                daemon=True
+            )
+            thread.start()
+            
+        except socket.timeout:
+            continue
+        # ... error handling ...
+\end{lstlisting}
+
+\begin{lstlisting}[language=Python, caption={Server-Side Handshake Protocol}, label={lst:handshake}]
+def _handle_incoming_connection(self, conn, addr):
+    """Handle incoming P2P connection (server side)."""
+    try:
+        conn.settimeout(self.HANDSHAKE_TIMEOUT)
+        
+        # Read handshake line: "CONNECT <to_peer> <from_peer> <nonce>"
+        handshake = self._read_line(conn)
+        
+        parts = handshake.strip().split()
+        if len(parts) != 4 or parts[0] != 'CONNECT':
+            conn.sendall(b"REJECT Invalid handshake format\n")
+            conn.close()
+            return
+        
+        _, to_peer, from_peer, nonce = parts
+        
+        # Verify this connection is for this peer
+        if to_peer != self.peer_id:
+            conn.sendall(b"REJECT Wrong peer\n")
+            conn.close()
+            return
+        
+        # Accept connection
+        response = f"ACCEPT {to_peer} {from_peer} {nonce}\n"
+        conn.sendall(response.encode('utf-8'))
+        
+        # ... create connection object and start message loop ...
+\end{lstlisting}
+
+\subsubsection{Thread Safety with RLock}
+\label{subsec:appendix_thread_safety}
+To ensure thread safety when accessing shared resources like the \texttt{connections} dictionary, a \texttt{threading.RLock} is used. This snippet from \texttt{send\_message} demonstrates its usage, as mentioned in Section 3.2.1.
+
+\begin{lstlisting}[language=Python, caption={Ensuring Thread-Safe Access}, label={lst:rlock}]
+class P2PDaemon:
+    def __init__(self, ip, port, peer_id):
+        # ...
+        self.connections = {}  # remote_peer_id -> P2PConnection
+        self.lock = threading.RLock() # Reentrant lock for shared state
+        # ...
+
+    def send_message(self, to_peer, body, msg_type='CHAT'):
+        # The 'with' statement automatically acquires and releases the lock
+        with self.lock:
+            conn = self.connections.get(to_peer)
+            
+            if not conn:
+                print(f"[P2P] No connection to '{to_peer}'")
+                return False
+            
+            # ... build and send message ...
+            
+    def disconnect_peer(self, peer_id):
+        with self.lock:
+            if peer_id in self.connections:
+                # ... send CLOSE message and remove from dictionary ...
+                del self.connections[peer_id]
+
+\end{lstlisting}
+
+\subsection{HTTP Bridge Logic (\texttt{start\_sampleapp.py})}
+\label{sec:appendix_http_bridge}
+
+\subsubsection{HTTP to TCP Bridge (Sending Messages)}
+\label{subsec:appendix_http_to_tcp}
+The \texttt{/api/p2p-send} endpoint is a clear example of the "HTTP Bridge" pattern. It receives an HTTP POST request from the browser and translates it into a TCP message sent via the corresponding user's \texttt{P2PDaemon} instance.
+
+\begin{lstlisting}[language=Python, caption={/api/p2p-send Endpoint}, label={lst:p2p_send}]
+@app.route('/api/p2p-send', methods=['POST'])
+def p2p_send(headers, body, username=None):
+    """
+    Send P2P message to a peer.
+    POST /api/p2p-send with JSON: {to_peer, message, type}
+    """
+    try:
+        data = json.loads(body) if body else {}
+        to_peer = data.get('to_peer')
+        message = data.get('message', '')
+        
+        # Get P2P daemon for the currently logged-in user
+        with p2p_daemon_lock:
+            daemon = p2p_daemons.get(username)
+        
+        if not daemon:
+            return {'status': 400, 'body': '{"error": "P2P daemon not initialized."}'}
+        
+        # Send message via the P2P daemon's TCP socket
+        success = daemon.send_message(to_peer, message, 'CHAT')
+        
+        if success:
+            return {'status': 200, 'body': '{"status": "sent"}'}
+        else:
+            return {'status': 500, 'body': '{"error": "Failed to send"}'}
+    # ... error handling ...
+\end{lstlisting}
+
+\subsubsection{TCP to HTTP Bridge (Receiving Messages)}
+\label{subsec:appendix_tcp_to_http}
+The \texttt{/api/p2p-receive} endpoint provides the bridge in the reverse direction. The \texttt{P2PDaemon} places incoming TCP messages into a user-specific queue (\texttt{message\_queues}), and this endpoint allows the browser to poll for them via HTTP.
+
+\begin{lstlisting}[language=Python, caption={/api/p2p-receive Endpoint}, label={lst:p2p_receive}]
+# Global queue for messages from TCP daemon to HTTP poller
+message_queues = defaultdict(lambda: deque(maxlen=100))
+
+# In P2PDaemon, the on_message callback does this:
+def on_message(from_peer, to_peer, msg):
+    with message_lock:
+        message_queues[to_peer].append(msg)
+
+# The HTTP endpoint polled by the browser:
+@app.route('/api/p2p-receive', methods=['POST'])
+def p2p_receive(headers, body, username=None):
+    """Poll for incoming P2P messages."""
+    try:
+        # Get messages from this user's queue
+        with message_lock:
+            queue = message_queues[username]
+            messages = list(queue) # Get all messages
+            queue.clear() # Clear queue after reading
+        
+        return {
+            'status': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'messages': messages})
+        }
+    # ... error handling ...
+\end{lstlisting}
+
+\subsection{State Management Logic (\texttt{tracker.py})}
+\label{sec:appendix_tracker}
+The \texttt{get\_expired\_peers} method is the core of the Layer 1 Heartbeat mechanism (Section 2.3.3), responsible for detecting and cleaning up peers that have not sent a heartbeat within the 45-second timeout window.
+
+\begin{lstlisting}[language=Python, caption={Expired Peer Detection}, label={lst:expired_peers}]
+class PeerTracker:
+    HEARTBEAT_TIMEOUT_MS = 45000  # 45 seconds
+
+    def get_expired_peers(self):
+        """Scan for and remove expired peers."""
+        now = int(time.time() * 1000)
+        threshold = now - self.HEARTBEAT_TIMEOUT_MS
+
+        expired = []
+        with self.lock:
+            # Iterate over a copy of items to allow modification
+            for peer_id, peer in list(self.peers.items()):
+                if peer.last_seen < threshold and peer.status == "ONLINE":
+                    # Mark offline and notify other peers
+                    peer.status = "OFFLINE"
+                    expired.append(peer_id)
+                    self._broadcast_event_locked('peer-left', peer)
+
+                    # Remove from active peers map
+                    del self.peers[peer_id]
+        return expired
+\end{lstlisting}
+
+\subsection{Frontend Logic (\texttt{chat.js})}
+\label{sec:appendix_frontend}
+
+\subsubsection{Client-Side Long-Polling}
+\label{subsec:appendix_polling}
+The \texttt{pollMessages} function implements the client-side of the long-polling mechanism. It periodically calls the \texttt{/api/p2p-receive} endpoint and processes the returned messages, including handling the special \texttt{CLOSE} message type to gracefully end a session.
+
+\begin{lstlisting}[language=Java, caption={Polling for Messages}, label={lst:poll_messages}]
+// Poll for incoming P2P messages
+async function pollMessages() {
+    if (!p2pRegistered) return;
+    
+    try {
+        const response = await fetch('/api/p2p-receive', { /* ... */ });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const messages = data.messages || [];
+            
+            messages.forEach(msg => {
+                // Handle CLOSE message (session ended by remote peer)
+                if (msg.type === 'CLOSE') {
+                    if (msg.body === '__SESSION_ENDED__' || !msg.body) {
+                        handleRemoteSessionEnd(msg.from);
+                    }
+                    return;
+                }
+                
+                // Handle normal CHAT message
+                if (msg.type === 'CHAT' && activePeer && msg.from === activePeer) {
+                    appendMessage(msg.body, 'received', msg.from);
+                }
+            });
+        }
+    } catch (error) {
+        console.error('[Chat] Error polling messages:', error);
+    }
+}
+\end{lstlisting}
+
+\subsubsection{Bug Fix: Handling Rejected Connections}
+\label{subsec:appendix_bugfix1}
+The \texttt{pollConnectionResponses} function was created to fix Bug \#1. It polls a dedicated endpoint (\texttt{/api/p2p-get-responses}) to check if a connection request has been explicitly rejected by another peer, preventing the client from waiting indefinitely.
+
+\begin{lstlisting}[language=Java, caption={Polling for Connection Rejections}, label={lst:poll_responses}]
+// Poll for connection responses (accept/reject notifications)
+async function pollConnectionResponses() {
+    if (!p2pRegistered) return;
+    
+    try {
+        const response = await fetch('/api/p2p-get-responses');
+        
+        if (response.ok) {
+            const data = await response.json();
+            const responses = data.responses || [];
+            
+            responses.forEach(resp => {
+                if (resp.status === 'rejected') {
+                    // If we are waiting for this peer, show rejection message
+                    if (activePeer === resp.from) {
+                        appendSystemMessage(`${resp.from} rejected your connection request`, true);
+                        updateConnectionStatus(false, 'Request rejected');
+                        
+                        // Close chat window automatically
+                        setTimeout(() => {
+                            // ... logic to close chat UI ...
+                        }, 2000);
+                    }
+                }
+            });
+        }
+    } catch (error) {
+        console.error('[Chat] Error polling connection responses:', error);
+    }
+}
+\end{lstlisting}
+
+\section{Configuration \& Scripts}
+\label{sec:appendix_config_scripts}
+This section contains key configuration files and startup scripts that define how the system's components are launched and how they interact.
+
+\subsection{Proxy Configuration (\texttt{proxy.conf})}
+\label{subsec:appendix_proxy_conf}
+The \texttt{proxy.conf} file configures the reverse proxy (\texttt{proxy.py}). It defines the upstream server (the main application backend) and the static file directory, routing all incoming traffic accordingly.
+
+\begin{lstlisting}[language=bash, caption={Proxy Server Configuration}, label={lst:proxy_conf}]
+# WeApRous Proxy Configuration
+
+# Upstream application server
+upstream 127.0.0.1:9001
+
+# Directory for serving static files (HTML, CSS, JS)
+static_dir ./www/
+\end{lstlisting}
+
+\subsection{Master Startup Script (\texttt{start\_all.bat})}
+\label{subsec:appendix_startup_script}
+The \texttt{start\_all.bat} script is the master script used to launch the entire system. It starts the backend application server and the reverse proxy in separate processes, providing a single command to get the system running.
+
+\begin{lstlisting}[language=bash, caption={Master Startup Script for Windows}, label={lst:start_all}]
+@echo off
+REM
+REM Copyright (C) 2025 pdnguyen of HCMC University of Technology VNU-HCM.
+REM
+echo "Starting WeApRous services..."
+
+REM Start the backend server (SampleApp)
+echo "Starting backend server on port 9001..."
+start "Backend" cmd /c "python start_backend.py --server-port 9001"
+
+REM Wait a moment for the backend to initialize
+timeout /t 2 /nobreak > nul
+
+REM Start the proxy server
+echo "Starting proxy server on port 9000..."
+start "Proxy" cmd /c "python start_proxy.py --server-port 9000"
+
+echo "All services started."
+echo "Access the application at http://127.0.0.1:9000"
+\end{lstlisting}
+
+\subsection{Application Server Entrypoint}
+\label{subsec:appendix_app_entrypoint}
+The main entrypoint in \texttt{start\_sampleapp.py} (aliased as \texttt{start\_backend.py}) shows how command-line arguments are parsed to configure the server's IP and port, demonstrating the application's configurability.
+
+\begin{lstlisting}[language=Python, caption={Application Server Entrypoint Logic}, label={lst:app_entrypoint}]
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(
+        prog='SampleApp',
+        description='WeApRous sample application with authentication',
+        epilog='Task 1 & 2 implementation'
+    )
+    parser.add_argument('--server-ip', default='127.0.0.1')
+    parser.add_argument('--server-port', type=int, default=PORT)
+ 
+    args = parser.parse_args()
+    ip = args.server_ip
+    port = args.server_port
+
+    print(f"[SampleApp] Starting on {ip}:{port}")
+    
+    app.prepare_address(ip, port)
+    app.run()
+\end{lstlisting}
+
+\section{API \& Protocol Reference}
+\label{sec:appendix_api_protocol}
+
+\subsection{HTTP API Endpoints}
+\label{subsec:appendix_api}
+The following table details the RESTful API endpoints provided by the HTTP Bridge (\texttt{start\_sampleapp.py}). These endpoints facilitate communication between the web browser client and the backend P2P system.
+
+\begin{longtable}{|p{0.1\linewidth}|p{0.25\linewidth}|p{0.55\linewidth}|}
+    \caption{HTTP API Endpoint Reference} \label{tab:api_reference} \\
+    \hline
+    \textbf{Method} & \textbf{Endpoint} & \textbf{Description} \\
+    \hline
+    \endfirsthead
+    
+    \multicolumn{3}{c}%
+    {{\bfseries \tablename\ \thetable{} -- continued from previous page}} \\
+    \hline
+    \textbf{Method} & \textbf{Endpoint} & \textbf{Description} \\
+    \hline
+    \endhead
+
+    \hline \multicolumn{3}{|r|}{{Continued on next page}} \\ \hline
+    \endfoot
+
+    \hline
+    \endlastfoot
+
+    % --- Authentication ---
+    \multicolumn{3}{|c|}{\textbf{Authentication}} \\
+    \hline
+    POST & \texttt{/login} & Authenticates a user based on username and password. On success, sets `auth` and `username` cookies and redirects to the main page. \\
+    \hline
+    GET, POST & \texttt{/logout} & Clears user session cookies, unregisters the peer from the tracker, stops the P2P daemon, and redirects to the login page. \\
+    \hline
+    
+    % --- Peer Management ---
+    \multicolumn{3}{|c|}{\textbf{Peer Management \& Discovery}} \\
+    \hline
+    POST & \texttt{/api/submit-info} & Registers the logged-in user as a peer with the tracker. This is the first step after login to become visible to others. It also creates and starts the user's P2P daemon. \\
+    \hline
+    GET & \texttt{/api/get-list} & Retrieves a list of all currently online peers, excluding the requesting user. \\
+    \hline
+    POST & \texttt{/api/broadcast-peer} & Long-polling endpoint for receiving real-time peer events (e.g., `peer-joined`, `peer-left`). \\
+    \hline
+    POST & \texttt{/api/heartbeat} & Sent periodically by the client to signal to the tracker that the peer is still active. Prevents the peer from being marked as expired. \\
+    \hline
+
+    % --- Connection Lifecycle ---
+    \multicolumn{3}{|c|}{\textbf{P2P Connection Lifecycle}} \\
+    \hline
+    POST & \texttt{/api/p2p-request} & Sends a connection request to another peer. The request is queued on the server for the target peer to retrieve. \\
+    \hline
+    GET & \texttt{/api/p2p-get-requests} & Polled by the client to check for any pending incoming connection requests from other peers. \\
+    \hline
+    POST & \texttt{/api/p2p-accept} & Accepts an incoming connection request. This triggers the server to initiate a direct TCP connection to the requesting peer. \\
+    \hline
+    POST & \texttt{/api/p2p-reject} & Rejects an incoming connection request. A "rejected" notification is queued for the original requester. \\
+    \hline
+    GET & \texttt{/api/p2p-get-responses} & Polled by the client to check for \texttt{accepted} or \texttt{rejected} responses to its own outgoing connection requests. (Fix for Bug \#1). \\
+    \hline
+    POST & \texttt{/api/p2p-disconnect} & Instructs the P2P daemon to close its TCP connection with a specified peer. \\
+    \hline
+
+    % --- Messaging ---
+    \multicolumn{3}{|c|}{\textbf{P2P Messaging}} \\
+    \hline
+    POST & \texttt{/api/p2p-send} & The core of the HTTP-to-TCP bridge. Sends a chat message to a connected peer via the user's P2P daemon. \\
+    \hline
+    POST & \texttt{/api/p2p-receive} & The core of the TCP-to-HTTP bridge. Polls the server for any messages that the P2P daemon has received and placed in the user's message queue. \\
+    \hline
+
+    % --- Status & Debugging ---
+    \multicolumn{3}{|c|}{\textbf{Status \& Debugging}} \\
+    \hline
+    GET & \texttt{/api/p2p-status} & Retrieves the status of the user's P2P daemon, including its running state, port, and list of active TCP connections. \\
+    \hline
+\end{longtable}
+
+\subsection{P2P Messaging Protocol}
+\label{subsec:appendix_p2p_protocol}
+The direct peer-to-peer communication occurs over a custom, line-delimited TCP protocol.
+
+\subsubsection{Handshake Protocol}
+A handshake is required to establish a valid connection.
+\begin{itemize}
+    \item \textbf{Client sends:} \texttt{CONNECT <to\_peer\_id> <from\_peer\_id> <nonce>\textbackslash n}
+    \begin{itemize}
+        \item The client initiates a TCP connection and sends this line first.
+    \end{itemize}
+    \item \textbf{Server responds with ACCEPT:} \texttt{ACCEPT <to\_peer\_id> <from\_peer\_id> <nonce>\textbackslash n}
+    \begin{itemize}
+        \item If the \texttt{to\_peer\_id} matches the server's identity, it accepts the connection.
+    \end{itemize}
+    \item \textbf{Server responds with REJECT:} \texttt{REJECT <reason>\textbackslash n}
+    \begin{itemize}
+        \item If the handshake is malformed or the \texttt{to\_peer\_id} is incorrect, the connection is rejected and closed.
+    \end{itemize}
+\end{itemize}
+
+\subsubsection{Message Frame Structure}
+After a successful handshake, all subsequent communication consists of single-line JSON objects, terminated by a newline character (\texttt{\textbackslash n}). Each JSON object represents one message.
+
+\begin{lstlisting}[caption={General P2P Message Structure}]
+{
+  "type": "CHAT|PING|PONG|CLOSE",
+  "from": "sender_peer_id",
+  "to": "receiver_peer_id",
+  "timestamp": 1678886400000,
+  "msg_id": "unique-uuid-for-chat-messages",
+  "body": "Message content or empty"
+}
+\end{lstlisting}
+
+\subsubsection{Message Types}
+\begin{itemize}
+    \item \textbf{CHAT}: A standard text message from one user to another. The `body` contains the message content.
+    \item \textbf{PING}: A keepalive message sent periodically by the daemon to check if the connection is still alive.
+    \item \textbf{PONG}: The response to a \texttt{PING} message. If a \texttt{PONG} is not received within the idle timeout (30 seconds), the connection is considered dead and is closed.
+    \item \textbf{CLOSE}: A message indicating a graceful shutdown of the session. It is sent before the socket is closed, allowing the recipient's UI to be notified (Fix for Bug \#3).
+\end{itemize}
+
+\section{Detailed Test Logs}
+\label{sec:test_logs}
+
+This section presents the actual logs captured from the system during the execution of key test scenarios (as defined in Table~\ref{tab:test-scenarios}). The logs are taken directly from the backend (WeApRous Backend) and proxy (WeApRous Proxy) terminals, demonstrating that the system's behavior aligns with its intended design.
+
+\subsection{Scenario 1: Peer Login and Registration}
+\textbf{Description:} \texttt{user1} and \texttt{user2} log in. Their clients then call the \texttt{/api/submit-info} endpoint, which registers them with the tracker and starts their respective P2P daemons.
+
+\begin{lstlisting}[language=bash, caption={Actual Logs for User Login and Registration}, label={lst:log_login_actual}]
+[SampleApp] Login Success for 'user1'
+[SampleApp] submit-info from user: user1
+[SampleApp] P2P daemon created for 'user1' on port 9101
+[Tracker] Registering peer: user1 at 127.0.0.1:9101
+[Tracker] Broadcasting event: {'type': 'peer-joined', ...}
+[SampleApp] Peer registered: user1 at 127.0.0.1:9101
+
+[SampleApp] Login Success for 'user2'
+[SampleApp] submit-info from user: user2
+[SampleApp] P2P daemon created for 'user2' on port 9102
+[Tracker] Registering peer: user2 at 127.0.0.1:9102
+[Tracker] Broadcasting event: {'type': 'peer-joined', ...}
+[SampleApp] Peer registered: user2 at 127.0.0.1:9102
+\end{lstlisting}
+\textbf{Analysis:} The logs from \texttt{WeApRous Backend} terminal confirm the sequence of events for both users. Each successful login is followed by a call to \texttt{submit-info}. The system correctly assigns unique ports (\texttt{9101} for \texttt{user1}, \texttt{9102} for \texttt{user2}) and registers them with the tracker, which in turn broadcasts \texttt{peer-joined} events. This behavior matches the logic in the \texttt{/api/submit-info} handler (see Table~\ref{tab:api_reference}).
+
+\subsection{Scenario 2: P2P Connection Handshake (Request/Accept)}
+\textbf{Description:} \texttt{user1} sends a connection request to \texttt{user2}. \texttt{user2} accepts the request, which initiates the TCP handshake.
+
+\begin{lstlisting}[language=bash, caption={Actual Logs for P2P Handshake}, label={lst:log_handshake_actual}]
+# --- Logs for user1 (Requester) ---
+[SampleApp] 'user1' sent connection request to 'user2'
+[P2PDaemon-user1] INFO: Accepted incoming connection from ('127.0.0.1', 52196)
+[P2PDaemon-user1] DEBUG: -> RECV: HELLO user2 ...
+[P2PDaemon-user1] DEBUG: <- SEND: HELLO_ACK user1
+[P2PDaemon-user1] INFO: Handshake successful with user2. Connection established.
+[P2P] 'user1' connected to 'user2'
+
+# --- Logs for user2 (Acceptor) ---
+[SampleApp] 'user2' polled 1 requests
+[SampleApp] 'user2' accepted connection from 'user1'
+[P2PDaemon-user2] INFO: Connecting to user1 at 127.0.0.1:9101...
+[P2PDaemon-user2] DEBUG: <- SEND: HELLO user2 ...
+[P2PDaemon-user2] DEBUG: -> RECV: HELLO_ACK user1
+[P2PDaemon-user2] INFO: Handshake successful with user1. Connection established.
+[P2P] 'user2' connected to 'user1'
+\end{lstlisting}
+\textbf{Analysis:} The logs clearly show the designed protocol flow. \texttt{user1} sends a request via the HTTP server. After \texttt{user2} accepts, \texttt{user2}'s daemon initiates the TCP connection to \texttt{user1}'s daemon. The \texttt{HELLO/HELLO\_ACK} exchange confirms a successful handshake, as implemented in the \texttt{\_handle\_incoming\_connection} method (see Listing~\ref{lst:handshake}).
+
+\subsection{Scenario 3: P2P Chat Message Exchange}
+\textbf{Description:} After connecting, \texttt{user1} sends the message "hi" to \texttt{user2}.
+
+\begin{lstlisting}[language=bash, caption={Actual Logs for P2P Message Exchange}, label={lst:log_messaging_actual}]
+# --- Logs for user1 (Sender) ---
+[SampleApp] 'user1' sent CHAT to 'user2'
+[P2PDaemon-user1] DEBUG: <- SEND to user2: CHAT|...|hi
+
+# --- Logs for user2 (Receiver) ---
+[P2PDaemon-user2] DEBUG: -> RECV from user1: CHAT|...|hi
+[P2PDaemon-user2] DEBUG: Parsed message from user1: type=CHAT, body=hi
+[P2P->Queue] Message from 'user1' queued for 'user2'
+[SampleApp] 'user2' polled 1 messages
+\end{lstlisting}
+\textbf{Analysis:} The logs validate the HTTP-to-TCP-to-HTTP message bridge. The \texttt{/api/p2p-send} call from \texttt{user1}'s browser results in a \texttt{CHAT} message being sent over the direct TCP link. \texttt{user2}'s daemon receives it, places it in the user-specific queue, and the message is retrieved by \texttt{user2}'s browser via a long-poll to \texttt{/api/p2p-receive}. This matches the logic in Listings~\ref{lst:p2p_send} and \ref{lst:p2p_receive}.
+
+\subsection{Scenario 4: Peer Disconnection via Heartbeat Timeout}
+\textbf{Description:} \texttt{user1}'s client is closed. After 30 seconds, the tracker no longer receives heartbeats from \texttt{user1} and marks the peer as \texttt{OFFLINE}.
+
+\begin{lstlisting}[language=bash, caption={Actual Logs for Heartbeat Timeout}, label={lst:log_timeout_actual}]
+# --- Logged during user2's periodic heartbeat call ---
+[SampleApp] heartbeat from user2, expired: []
+...
+# --- After user1 has been offline for >30 seconds ---
+[SampleApp] heartbeat from user2, expired: ['user1']
+[Tracker] Peer user1 expired. Last seen: ...
+[Tracker] Broadcasting event: {'type': 'peer-left', 'peer': ...}
+\end{lstlisting}
+\textbf{Analysis:} The {WeApRous Backend} terminal log shows that \texttt{user2}'s periodic calls to \texttt{/api/heartbeat} initially report no expired peers. After the timeout period, a subsequent call correctly identifies \texttt{user1} as expired. The tracker then removes \texttt{user1} and broadcasts a \texttt{peer-left} event, demonstrating the functionality of the \texttt{get\_expired\_peers} method (see Listing~\ref{lst:expired_peers}).

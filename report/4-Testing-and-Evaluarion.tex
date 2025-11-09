@@ -1,0 +1,103 @@
+\section{Testing and Evaluation}
+
+This chapter presents the testing methodology adopted to validate the system’s functionality and robustness. 
+It analyzes the observed performance results and discusses the inherent limitations of the current implementation, 
+along with potential directions for future improvement.
+
+\subsection{Test Scenarios}
+
+To ensure correctness and reliability, a series of manual, end-to-end test scenarios were executed. 
+These tests, derived from procedures documented in \texttt{README\_P2P.md}, cover all major workflows—from user authentication and peer discovery to failure recovery and connection timeouts. 
+The primary test cases are summarized in Table~\ref{tab:test-scenarios}.
+
+\begin{longtable}{|p{0.8cm}|p{2.4cm}|p{4cm}|p{6.4cm}|}
+
+\caption{Primary system test scenarios.}
+\label{tab:test-scenarios} \\
+
+\hline
+\textbf{ID} & \textbf{Scenario} & \textbf{Description} & \textbf{Expected Result} \\ 
+\hline
+\endfirsthead
+
+\caption[]{-- continued from previous page} \\
+\hline
+\textbf{ID} & \textbf{Scenario} & \textbf{Description} & \textbf{Expected Result} \\ 
+\hline
+\endhead
+
+\hline 
+\multicolumn{4}{r}{{Continued on next page}} \\ 
+\endfoot
+
+\hline
+\endlastfoot
+
+% The table body starts here
+TS1 & Login and Peer Discovery & A user logs in with valid credentials while another user is already online. & The new user is authenticated successfully, and their presence is broadcast to all active peers, appearing in the peer list in real time. \\ 
+\hline
+TS2 & P2P Connection Handshake & User~A requests a connection to User~B, and User~B accepts. & User~A’s request appears in User~B’s interface; upon acceptance, a direct TCP connection is established and both UIs transition to the active chat state. \\ 
+\hline
+TS3 & P2P Connection Rejection & User~A requests a connection to User~B, and User~B rejects. & User~A receives an immediate rejection notification, and the pending chat window closes automatically. \\ 
+\hline
+TS4 & Real-Time Messaging & During an active P2P session, User~A sends a message to User~B. & The message appears almost instantly in User~B’s chat window, confirming correct operation of the TCP channel. \\ 
+\hline
+TS5 & Graceful Session Termination & User~A clicks the "End Session" button during an active chat. & The connection closes gracefully; User~B receives a "Session ended by peer" message and the input field is disabled. \\ 
+\hline
+TS6 & Unexpected Client Disconnect (Heartbeat Timeout) & User~A closes their browser tab without logging out. & After 45~seconds of inactivity, the backend Tracker marks User~A as offline and broadcasts a \texttt{peer-left} event to all other peers. \\ 
+\hline
+TS7 & P2P Network Interruption (Keepalive Timeout) & The TCP connection between two daemons is forcibly terminated (simulated by killing one daemon process). & After 30~seconds without \texttt{PONG} responses, the remaining daemon detects the idle connection, closes its socket, and updates the UI accordingly. \\ 
+
+\end{longtable}
+
+\subsection{Result Analysis}
+
+The executed tests confirmed that the system fulfills all functional requirements and demonstrates robust behavior under both normal and failure conditions.
+
+\paragraph{Functional Compliance}
+All mandatory features were successfully verified, including cookie-based authentication, hybrid Client–Server and P2P communication, 
+and real-time messaging without the use of prohibited frameworks or protocols such as WebSocket. 
+Each workflow behaved as expected across multiple user sessions.
+
+\paragraph{Latency and Response Time}
+The system’s perceived responsiveness is primarily determined by the frontend’s long-polling intervals. 
+As defined in \texttt{chat.js}, peer discovery events have a maximum latency of approximately 3~seconds, while chat message retrieval incurs a maximum delay of about 2~seconds. 
+Although not instantaneous, this performance is acceptable for the project’s scope and represents a significant improvement over conventional short-polling mechanisms.
+
+\paragraph{System Stability}
+The dual-layer health check strategy proved highly effective in maintaining operational stability. 
+The 45-second HTTP heartbeat reliably detected and cleaned up inactive (“zombie”) sessions, 
+while the 30-second TCP keepalive prevented indefinite hanging of broken peer connections. 
+The system remained stable for extended periods with multiple concurrent users and exhibited no runtime crashes or deadlocks.
+
+\paragraph{Scalability and Resource Consumption}
+While functionally complete, the current architecture has inherent scalability limitations. 
+All application state—including peer registries and message queues—is stored in the backend’s memory, 
+creating a centralized bottleneck that constrains concurrent user capacity. 
+Moreover, each authenticated user spawns a dedicated \texttt{P2PDaemon} process with multiple threads, 
+causing CPU and memory usage to increase linearly with the number of active sessions. 
+This design remains suitable for small-scale experiments but would require redesign for deployment at larger scale.
+
+\subsection{Limitations and Future Improvements}
+
+Although the system meets all defined objectives, several limitations were identified during evaluation, 
+offering clear directions for enhancement in future iterations.
+
+\paragraph{Current Limitations}
+\begin{itemize}
+    \item \textbf{No NAT Traversal:} Direct TCP communication functions correctly on a local network but fails across public networks due to Network Address Translation (NAT) restrictions.
+    \item \textbf{No Data Persistence:} All user data, session state, and message history are stored in memory and lost when the server restarts.
+    \item \textbf{Polling-Induced Latency:} The long-polling approach inherently introduces 2–3~second delays, limiting responsiveness compared to real-time protocols.
+\end{itemize}
+
+\paragraph{Future Improvements}
+\begin{itemize}
+    \item \textbf{Implement NAT Traversal:} Incorporate UDP hole punching or integrate STUN/TURN servers to support peer connectivity across the public internet.
+    \item \textbf{Introduce Persistence:} Replace in-memory state with a lightweight database (e.g., SQLite) or an in-memory data store (e.g., Redis) to preserve chat history and session data across restarts.
+    \item \textbf{Adopt Real-Time Protocols:} If permitted, migrate from long-polling to WebSocket or HTTP/2 push to eliminate latency and reduce overhead.
+    \item \textbf{Enhance Scalability:} Re-architect the monolithic backend into a distributed system. 
+    Use shared caching for global state management and consider asynchronous I/O models (e.g., \texttt{asyncio}) for handling higher concurrency with lower resource consumption.
+\end{itemize}
+
+In summary, the testing results demonstrate that the system performs reliably and satisfies all project requirements. 
+Although constrained by its design scope, the implementation provides a solid foundation for a more scalable and production-ready architecture in future development.

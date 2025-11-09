@@ -1,0 +1,85 @@
+\section{Introduction}
+
+\subsection{Motivation}
+
+The Computer Networks course provides fundamental knowledge of the principles and protocols that underpin modern digital communication. While theoretical instruction establishes the conceptual foundation, practical implementation is essential to achieve a deep and enduring understanding of complex networking systems. This assignment therefore serves as a capstone project, bridging the gap between theory and practice by requiring students to design and construct a functioning networked application from first principles.
+
+The primary motivation for this project is to reinforce comprehension of core networking paradigms—specifically, the Client–Server and Peer-to-Peer (P2P) communication models. By developing a hybrid architecture that integrates the strengths of both, this work offers hands-on exposure to their respective design characteristics, operational trade-offs, and performance implications. Moreover, the assignment mandates the exclusive use of low-level TCP/IP socket programming, encouraging an in-depth exploration of the transport layer’s mechanics, including connection establishment, data exchange, concurrency, and session management. This deliberate exclusion of high-level frameworks ensures that students gain genuine, practical mastery of fundamental network programming concepts.
+
+\subsection{Problem Statement and Objectives}
+
+\subsubsection{Problem Statement}
+The assignment requires the design and implementation of a real-time chat application that combines the Client–Server and Peer-to-Peer (P2P) communication paradigms within a unified hybrid system. The system must demonstrate the interaction between centralized HTTP-based communication and decentralized TCP-based messaging. Through this implementation, students are expected to gain practical insight into how modern networked systems manage connections, data exchange, and state consistency across distributed nodes.
+
+\subsubsection{Constraints}
+
+The project is intentionally constrained to encourage a deeper understanding of low-level networking principles:
+\begin{itemize}
+\item No use of external web frameworks or third-party networking libraries is permitted.
+\item WebSocket or other high-level real-time abstractions are prohibited.
+\item All network functionalities, including protocol logic, session management, and connection handling, must be manually implemented using raw \texttt{socket} programming and standard Python libraries.
+\end{itemize}
+
+\subsubsection{Objectives}
+The overarching goal of this assignment is to strengthen both theoretical knowledge and practical competence in network programming through hands-on experience:
+\begin{itemize}
+\item To master the HTTP request–response cycle, including the use of cookies for session persistence and authentication.
+\item To design and implement a stable hybrid communication model that integrates both centralized (Client–Server) and decentralized (P2P) data exchange.
+\item To ensure full compliance with assignment specifications, demonstrating a clear understanding of socket-based communication, concurrency, and protocol design.
+\end{itemize}
+
+\subsection{Theoretical Background}
+
+A solid understanding of networking principles is essential to comprehend the architecture and implementation of this assignment. The following subsections summarize the theoretical foundations underlying the system design and justify the methodological choices applied in the project.
+
+\subsubsection{Network Communication Models}
+
+Modern distributed systems are typically designed following one of two fundamental paradigms: the Client–Server model or the Peer-to-Peer (P2P) model.
+In the Client–Server paradigm, a central server hosts resources and services that clients request and consume. This model provides strong control, simplified authentication, and centralized state management, making it reliable for session handling and structured data access. However, its centralized nature can create potential bottlenecks and a single point of failure when system load increases.
+
+In contrast, the Peer-to-Peer model distributes responsibilities equally among participants, referred to as peers. Each peer can function both as a client and a server, enabling direct communication and data sharing without the mediation of a central authority. This model is inherently scalable and resilient but presents challenges in maintaining consistency, authentication, and network discovery.
+
+This project adopts a hybrid approach that integrates both models. The centralized Client–Server component (implemented via HTTP) provides coordination and session management, while the P2P component (implemented via raw TCP sockets) enables direct, low-latency message exchange between peers. This combination leverages the control and simplicity of the server-based model while preserving the efficiency and decentralization of P2P communication.
+
+\subsubsection{Network Protocols}
+
+Three key protocols form the foundation of this system’s communication mechanisms:
+\begin{itemize}
+    \item \textbf{TCP/IP}: The Transmission Control Protocol (TCP), operating atop the Internet Protocol (IP), ensures reliable, ordered, and error-checked delivery of data between hosts. TCP’s three-way handshake mechanism—comprising SYN, SYN-ACK, and ACK packets—establishes a stable connection before data transmission begins. This feature is critical for guaranteeing message integrity in peer-to-peer exchanges.
+
+    \item \textbf{HTTP}: The Hypertext Transfer Protocol (HTTP) serves as the foundation for the Client–Server portion of the system. It follows a stateless request–response model in which clients send requests and servers return corresponding responses. HTTP headers and cookies enable additional stateful functionality such as session persistence and user authentication. Furthermore, this project employs the long-polling technique to simulate real-time communication over standard HTTP by maintaining open connections until new data becomes available.
+
+    \item \textbf{RESTful API}: Representational State Transfer (REST) defines an architectural style for designing networked applications that interact via standardized HTTP methods—\texttt{GET}, \texttt{POST}, \texttt{PUT}, and \texttt{DELETE}. RESTful endpoints simplify integration and promote scalability by mapping resources to URLs in a clear, consistent structure. The project utilizes REST principles to design clean API routes that facilitate message exchange and peer management.
+\end{itemize}
+
+Together, these protocols ensure both reliability and modularity, allowing seamless communication between processes in different roles (proxy, backend, and daemon).
+
+\subsubsection{Multithreading and Concurrency}
+Multithreading plays a crucial role in enabling the system to serve multiple clients concurrently. Since each client request or peer connection operates independently, dedicated threads are used to handle these interactions without blocking others. This approach ensures responsiveness and scalability, particularly under simultaneous communication loads.
+
+Thread synchronization mechanisms are applied to maintain \textbf{thread safety} when accessing shared resources such as socket descriptors, session tables, and peer registries. By using synchronized data structures and controlled critical sections, the system prevents race conditions and data inconsistencies, ensuring stable and predictable performance even in a highly concurrent environment.
+
+\subsection{Relation to Assignment Requirements}
+This project is structured to directly fulfill the specified requirements of Assignment 1 – HTTP Server and Chat Application:
+
+\begin{itemize}
+\item \textbf{Task 1A \& 1B – HTTP Cookie and Session Management}: Implementation of login validation and cookie-based access control, demonstrating an understanding of state maintenance in an otherwise stateless HTTP environment.
+\item \textbf{Task 2 – Hybrid Chat Application (Client–Server + P2P)}: Design of a distributed messaging framework that combines centralized peer registration with decentralized message delivery.
+\item \textbf{Task 3 – Full Integration of System Processes}: Integration of all components—proxy, backend, webapp, and P2P daemon—into a cohesive network environment that supports parallel operation and message routing.
+\end{itemize}
+
+The solution adheres strictly to the assignment’s \textbf{TCP/IP-based design principles}, utilizing only standard Python modules such as \texttt{socket} and \texttt{threading}. By avoiding external frameworks, the project emphasizes a deep understanding of low-level networking concepts, protocol handling, and process coordination.
+
+\subsection{Problem Analysis and Solution Choice}
+A key technical constraint in this assignment arises from the browser’s limited network capabilities. Standard web browsers, due to inherent security and architectural restrictions, cannot establish raw TCP socket connections. Instead, they rely exclusively on the HTTP or WebSocket protocols, both of which operate at a higher abstraction layer. Since the use of WebSocket is explicitly prohibited by the assignment’s constraints, direct peer-to-peer communication between browser clients cannot be implemented natively. This limitation necessitates an alternative architectural approach to facilitate real-time data exchange while adhering to the given restrictions.
+
+To address this challenge, the system adopts a hybrid communication architecture that integrates centralized HTTP interaction with decentralized TCP-based peer networking. Two principal design strategies underpin this hybrid approach:
+
+\begin{itemize}
+    \item \textbf{HTTP Bridge via Backend Daemon}: The backend daemon serves as an intermediary—or “bridge”—between the browser-based frontend and the peer-to-peer (P2P) network. Browser clients interact with the daemon through RESTful HTTP endpoints, while the daemon manages direct TCP socket connections with other peers. This structure effectively extends the browser’s communication reach beyond the limitations of HTTP, enabling indirect but fully functional P2P messaging through a relay mechanism.
+    
+    \item \textbf{Long-Polling Mechanism for Real-Time Interaction}: Traditional short-polling, where the client repeatedly sends requests at fixed intervals, leads to high network overhead and increased latency. In contrast, long-polling maintains an open HTTP connection until new data becomes available, after which the server responds and the client immediately reopens the connection. This technique minimizes unnecessary requests and provides a near real-time user experience using only standard HTTP.
+    
+\end{itemize}
+
+The resulting hybrid solution achieves a balance between centralized control and decentralized communication. The server-side component (proxy and backend) centralizes user authentication, peer registration, and message routing policies, ensuring reliability and consistency. Meanwhile, the P2P layer (TCP daemons) enables direct peer-to-peer message transfer, significantly reducing latency and server load. This combination leverages the robustness of the Client–Server model and the scalability of the P2P model, forming a cohesive and efficient framework that fulfills both the technical and pedagogical objectives of the assignment.

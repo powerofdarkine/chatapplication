@@ -1,0 +1,267 @@
+\section{System Design}
+
+\subsection{Overall Architecture}
+
+The system is designed as a multi-process hybrid architecture that logically separates responsibilities across distinct, interacting components. This modular design ensures scalability, maintainability, and clear process isolation while adhering to the project’s strict constraints of using only low-level socket programming. At a high level, the architecture comprises four key components: a browser-based Frontend, a Reverse Proxy, a centralized Backend Server responsible for state and session management, and a decentralized network of Peer-to-Peer (P2P) Daemons that handle direct message exchange.
+
+Communication flows are strictly defined and directional. All client-initiated interactions begin as standard HTTP requests, which are initially received by the Proxy Server. The proxy forwards these requests to the Backend Server, which functions as the central coordinator of the system. The backend is responsible for authenticating users, managing active sessions, maintaining the Tracker—a registry of currently connected peers—and spawning a dedicated P2P Daemon process for each authenticated user.
+
+Once initialized, these P2P Daemons operate semi-independently from the backend. They establish direct TCP socket connections with other daemons to exchange messages, implementing custom handshake and heartbeat protocols to maintain connection reliability. This separation allows the backend to focus on coordination and supervision, while actual chat traffic flows directly between peers, effectively offloading data transfer from the central server and achieving near real-time communication performance.
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{graphics/overall-architecture.drawio.png}
+    \caption{Overall Architecture}
+    \label{fig:overall-arch}
+\end{figure}
+
+The roles and interactions of each primary system component are summarized in Table~\ref{tab:role-of-each-component}.
+
+\begin{table}[H]
+\centering
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{3.2cm}|p{6cm}|p{1.7cm}|p{3cm}|}
+\hline
+\textbf{Component} & \textbf{Primary Role} & \textbf{Protocol} & \textbf{Communicates With} \\
+\hline
+\textbf{Frontend (Browser)} \newline (\texttt{chat.js}) & Provides the graphical user interface for chat interactions. Initiates all user actions via asynchronous HTTP requests, including long-polling for peer updates and message retrieval. & HTTP & Proxy Server \\
+\hline
+\textbf{Proxy Server} \newline (\texttt{proxy.py}) & Acts as the system’s single entry point (default port 8080). Forwards all HTTP traffic to the appropriate backend instance, abstracting backend addresses from the client and enabling modular scaling. & HTTP & Backend Server \\
+\hline
+\textbf{Backend Server} \newline (\texttt{start\_sample-\break app.py}, \texttt{tracker.py}) & Handles user authentication, session management, and peer registration through the Tracker module. Exposes RESTful API endpoints, serves static web content, and supervises the lifecycle of spawned P2P Daemons. & HTTP, IPC & Proxy Server, P2P Daemons \\
+\hline
+\textbf{P2P Daemon} \newline (\texttt{p2p\_daemon.py}) & Maintains persistent TCP connections with other peers over dedicated ports (range: 9100–9199). Implements custom handshake and keepalive (PING/PONG) mechanisms to support reliable, decentralized communication. & TCP & Other P2P Daemons, Backend Server (via callbacks) \\
+\hline
+\end{tabular}
+\caption{Roles and interaction of each system component.}
+\label{tab:role-of-each-component}
+\end{table}
+
+\subsection{System Workflows}
+
+The system’s functionality is realized through a set of well-defined communication workflows that govern how users interact with the application and how messages are exchanged across distributed components.
+Each workflow involves coordination among multiple modules operating over HTTP (for centralized coordination) and TCP (for direct peer communication).
+The following subsections describe these workflows in detail.
+
+\subsubsection{Login and Cookie Authentication}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{graphics/Login-and-Cookie-Authentication.sequence.png}
+    \caption{Sequence Diagram of Login}
+    \label{fig:seq-dia-of-login}
+\end{figure}
+
+This workflow establishes user identity and initiates a persistent session.
+\begin{enumerate}
+    \item The user submits their credentials (\texttt{username}, \texttt{password}) via an HTTP \texttt{POST} request from the login form (\texttt{login.html}) to the \texttt{/login} endpoint.
+    \item The Backend Server (\texttt{start\_sampleapp.py}) receives the request and validates the credentials against its internal authentication store.
+    \item Upon successful validation, the backend generates a session token—typically a Base64 encoding of the credentials—and returns it within an HTTP \texttt{Set-Cookie} header.
+    \item The browser automatically stores the cookie (e.g., \texttt{auth=true}) and includes it in subsequent HTTP requests.
+    \item The HTTP adapter validates the cookie for protected routes, maintaining user sessions transparently without repeated logins.
+\end{enumerate}
+
+This flow transforms the stateless HTTP protocol into a session-aware mechanism using cookies, thereby ensuring secure and persistent user authentication across requests.
+
+\subsubsection{Peer Discovery}
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{graphics/Peer-Discovery.sequence.png}
+    \caption{Sequence Diagram of Peer Discovery}
+    \label{fig:seq-dia-of-peer-discovery}
+\end{figure}
+
+This workflow enables newly authenticated users to become visible to other online peers in real time.
+\begin{enumerate}
+    \item Immediately after a successful login, the client-side script (\texttt{chat.js}) sends an authenticated \texttt{POST} request to the endpoint \texttt{/api/submit-info}, providing the user’s metadata.
+    \item The Backend Server registers this user in the central Tracker module and spawns a dedicated P2P Daemon for them, assigning an available port in the range 9100–9199.
+    \item The Tracker then generates a peer-joined event and pushes it into the event queues of all currently connected peers.
+    \item Each connected client, which is continuously long-polling the \texttt{/api/broadcast-peer} endpoint, receives this update and dynamically refreshes its user interface to display the newly online peer.
+\end{enumerate}
+
+This mechanism, built upon long-polling, allows all clients to maintain near real-time awareness of network membership without relying on WebSocket connections.
+
+\subsubsection{P2P Connection Establishment}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{graphics/P2P-Connection-Establishment.sequence.png}
+    \caption{Sequence Diagram of P2P Connection Establishment}
+    \label{fig:seq-dia-of-p2p-esta}
+\end{figure}
+This workflow outlines the process of establishing a direct TCP channel between two peers for chat communication.
+
+\begin{enumerate}
+    \item When User A selects User~B from the peer list, the frontend issues a \texttt{POST} request to the endpoint \texttt{/api/p2p-connect}, specifying User B as the target.
+    \item The Backend Server consults the Tracker to obtain User B’s IP address and P2P daemon port, then instructs User A’s daemon to initiate a connection.
+    \item User A’s daemon, acting as a TCP client, opens a socket to User B’s daemon and sends a custom handshake message in the format:
+    \begin{lstlisting}
+CONNECT <user_B_id> <user_A_id> <nonce>\n.
+    \end{lstlisting}
+    
+    \item User B’s daemon, acting as a TCP server, verifies the request and responds with:
+    \begin{lstlisting}
+ACCEPT <user_B_id> <user_A_id> <nonce>\n     
+    \end{lstlisting}
+
+    \item Once both peers exchange valid handshake messages, the daemons register the connection as active, and the frontend updates the chat interface to indicate a secure P2P channel has been established.
+\end{enumerate}
+
+This process achieves direct peer connectivity while keeping the backend responsible only for coordination, not data transfer, thus preserving scalability and efficiency.
+
+\subsubsection{Message Exchange}
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.8\linewidth]{graphics/Message-Exchange.sequence.png}
+    \caption{Sequence Diagram of Message Exchange}
+    \label{fig:seq-dia-of-mess-exchange}
+\end{figure}
+Once a P2P connection is established, peers communicate directly via TCP sockets without routing messages through the backend.
+\begin{enumerate}
+    \item User A composes a message and triggers a send action on the frontend. The client sends an HTTP \texttt{POST} request to \texttt{/api/p2p-send}.
+
+    \item The Backend Server forwards this request to User A’s P2P Daemon through inter-process communication (IPC).
+
+    \item The daemon packages the message into a JSON-formatted object, for example:
+    \begin{lstlisting}
+{
+    "type": "CHAT",
+    "from": "A",
+    "to": "B",
+    "body": "Hello!"
+}
+    \end{lstlisting}
+and transmits it directly over the active TCP socket.
+
+    \item User B’s daemon receives, parses, and enqueues the message in a server-side buffer.
+    \item User B’s browser, which continuously long-polls the \texttt{/api/p2p-receive} endpoint, retrieves the message from the queue and renders it in the chat window.
+\end{enumerate}
+
+This workflow ensures low-latency, bidirectional communication while keeping the system compliant with browser and protocol limitations.
+
+By combining HTTP-based signaling with TCP-based data transfer, the application achieves real-time behavior without reliance on forbidden technologies such as WebSocket.
+
+\subsection{Protocol Design}
+To ensure reliable and structured communication between system components, a multi-layered, application-level protocol was designed. 
+This protocol governs all major operations, including peer-to-peer connection establishment, real-time message exchange, and session health monitoring. 
+Each layer builds upon lower-level TCP reliability while introducing domain-specific semantics to ensure consistency and extensibility.
+
+\subsubsection{P2P Handshake Protocol}
+Before any sensitive data is exchanged, two P2P daemons must authenticate their connection through a lightweight, custom, text-based handshake protocol. 
+This process confirms mutual intent to communicate and establishes a trusted session context. 
+All handshake messages are transmitted as plain text, terminated by a newline character (\texttt{\textbackslash n}). 
+Three message types are defined:
+
+\begin{itemize}
+    \item \textbf{CONNECT} \texttt{<to\_peer\_id> <from\_peer\_id> <nonce>} — Sent by the initiating daemon to request a new P2P session. The \texttt{nonce} is a unique identifier used to match the request with its response.
+    \item \textbf{ACCEPT} \texttt{<to\_peer\_id> <from\_peer\_id> <nonce>} — Sent by the receiving daemon to confirm the connection. The \texttt{nonce} must match the corresponding \texttt{CONNECT} message.
+    \item \textbf{REJECT} \texttt{<reason>} — Sent by the receiving daemon if the connection cannot be established (e.g., invalid peer ID, resource constraints).
+\end{itemize}
+
+A session is considered established only when the initiating daemon transmits a \texttt{CONNECT} message and receives a valid \texttt{ACCEPT} response with the matching \texttt{nonce}. 
+This simple yet effective exchange provides lightweight authentication and ensures that both peers explicitly consent to communication. 
+After the handshake completes successfully, all subsequent data is exchanged using the JSON-based Message Exchange Protocol.
+
+\subsubsection{Message Exchange Protocol}
+Once a P2P session is active, all communication occurs through single-line JSON objects. 
+This structured format simplifies parsing and allows future extensions. 
+Each message adheres to a shared schema, where the \texttt{type} field determines its function. 
+
+\begin{lstlisting}
+{
+  "type": "CHAT | PING | PONG | CLOSE",
+  "from": "<peer_id>",
+  "to": "<peer_id>",
+  "timestamp": "<epoch_ms>",
+  "msg_id": "<unique_id>",
+  "body": "<payload>"
+}
+\end{lstlisting}
+
+\paragraph{Field Descriptions}
+\begin{itemize}
+    \item \textbf{type}: Defines the intent of the message. Supported types include \texttt{CHAT} (user message), \texttt{PING} (keepalive probe), \texttt{PONG} (keepalive acknowledgment), and \texttt{CLOSE} (session termination request).
+    \item \textbf{from / to}: Peer identifiers of the sender and recipient, used for routing and validation.
+    \item \textbf{timestamp}: A UNIX epoch timestamp in milliseconds, facilitating message ordering and system logging.
+    \item \textbf{msg\_id}: A unique identifier for \texttt{CHAT} messages, enabling advanced features such as message tracking or read receipts.
+    \item \textbf{body}: The payload content. For \texttt{CHAT} messages, it contains user text; for other types, it may include metadata or remain empty.
+\end{itemize}
+
+Upon receiving a line of input from a TCP socket, the P2P daemon’s internal \texttt{\_messag-\break e\_loop} parses the line as a JSON object and dispatches it according to its \texttt{type}. 
+\texttt{PING} messages trigger an immediate \texttt{PONG} response, while \texttt{CHAT} and \texttt{CLOSE} messages are forwarded to the backend server via a callback mechanism for queuing and delivery to the recipient’s browser interface.
+
+\subsubsection{Health Check and Keepalive Mechanisms}
+To preserve system stability and handle unexpected disconnections (e.g., closed browser tabs, network interruptions), the system incorporates two complementary layers of health monitoring. 
+Each layer operates independently, targeting failures detectable only within its respective communication scope.
+
+\paragraph{Layer 1: Frontend--Backend (HTTP Heartbeat)}
+\begin{itemize}
+    \item \textbf{Mechanism:} The frontend JavaScript issues an HTTP \texttt{POST} request to the endpoint \texttt{/api/heartbeat} every 15~seconds.
+    \item \textbf{Timeout:} If the backend’s Tracker module does not receive a heartbeat from a peer within 45~seconds, that peer is marked as \texttt{OFFLINE}. 
+    The backend then broadcasts a \texttt{peer-left} event to all remaining active peers, prompting them to gracefully terminate corresponding P2P connections and update their user interfaces.
+\end{itemize}
+
+\paragraph{Layer 2: P2P Daemon (TCP Keepalive)}
+\begin{itemize}
+    \item \textbf{Mechanism:} Within an active TCP connection, each daemon sends a \texttt{PING} message every 10~seconds. 
+    Upon receipt, the peer must respond with a \texttt{PONG} message.
+    \item \textbf{Timeout:} If a daemon does not receive any data (either a \texttt{PONG} or a \texttt{CHAT} message) within 30~seconds, it assumes the connection has failed and closes the socket unilaterally.
+\end{itemize}
+
+\paragraph{Justification for Dual-Layer Monitoring}
+The coexistence of both mechanisms ensures comprehensive fault detection across the system stack. 
+The HTTP Heartbeat identifies user-level failures such as browser closures that are invisible to the TCP layer, whereas the TCP Keepalive detects lower-level network disruptions (e.g., link failure, router drop) that the backend cannot observe directly. 
+By combining these mechanisms, the system achieves robust, end-to-end reliability and maintains a consistent user experience under diverse network conditions.
+
+\subsection{Use Cases and Scenario Handling}
+
+The system is designed to remain resilient and predictable by explicitly handling a wide range of both functional and exceptional scenarios. 
+Table~\ref{tab:use-cases} outlines the key use cases, their expected outcomes, and the mechanisms implemented within the system to manage them.
+% You might need to add \usepackage{longtable} to your preamble
+\begin{longtable}{|p{1cm}|p{3.2cm}|p{4cm}|p{6.4cm}|}
+
+\caption{System Use Cases and Handling Mechanisms.}
+\label{tab:use-cases} \\
+
+\hline
+\textbf{ID} & \textbf{Scenario} & \textbf{Expected Behavior} & \textbf{System Handling} \\
+\hline
+\endfirsthead
+
+\caption[]{-- continued from previous page} \\
+\hline
+\textbf{ID} & \textbf{Scenario} & \textbf{Expected Behavior} & \textbf{System Handling} \\
+\hline
+\endhead
+
+\hline 
+\multicolumn{4}{r}{{Continued on next page}} \\ 
+\endfoot
+
+\hline
+\endlastfoot
+
+% The table body starts here
+UC1 & User logs in with valid credentials. & The user is redirected to the main chat interface, and a session cookie is issued to maintain authentication. & The \texttt{POST /login} endpoint validates credentials and, upon success, returns an HTTP~302 redirect with a \texttt{Set-Cookie} header containing the session token. \\
+\hline
+UC2 & User logs in with invalid credentials. & The user is redirected to a dedicated login error page. & The \texttt{POST /login} endpoint fails validation and returns an HTTP~302 redirect to \texttt{/login\_error.html}, providing clear feedback without exposing system details. \\
+\hline
+UC3 & A new peer joins the network. & All currently online peers are notified in real time, and their interfaces are updated to display the new peer. & The \texttt{POST /api/submit-info} endpoint triggers \texttt{tracker.register\_peer()}, which broadcasts a \texttt{peer-joined} event to all active clients via the long-polling mechanism on \texttt{/api/broadcast-peer}. \\
+\hline
+UC4 & A peer disconnects unexpectedly (e.g., browser crash). & After a 45-second timeout, the peer is marked as offline, and all other peers are notified to close the connection gracefully. & The backend Tracker stops receiving heartbeats from the peer’s frontend. A cleanup thread detects the 45~s timeout, marks the peer as \texttt{OFFLINE}, and broadcasts a \texttt{peer-left} event. \\
+\hline
+UC5 & A peer attempts to send a message to an offline target. & The sending user receives an immediate error notification, and the message is not transmitted. & The \texttt{POST /api/p2p-connect} or \texttt{/api/p2p-send} endpoints first query the Tracker. If the target peer’s status is not \texttt{ONLINE}, the server returns an HTTP~404 \texttt{Not Found} response with an explanatory error message. \\
+\hline
+UC6 & A P2P TCP connection fails mid-session (e.g., network interruption). & The corresponding P2P daemons detect the failure through a 30-second idle timeout and close the socket. & The P2P Daemon’s \texttt{PING/PONG} keepalive mechanism detects the inactivity. After 30~seconds without a response, the daemon’s \texttt{\_message\_loop} triggers a connection cleanup. \\
+
+\end{longtable}
+
+These scenarios form the foundation of the system’s robustness and fault tolerance. 
+Detection and handling are distributed across multiple layers: the frontend JavaScript (\texttt{chat.js}) provides immediate validation and user feedback; 
+the backend HTTP server (\texttt{start\_sampleapp.py}) enforces business logic and maintains peer state through the Tracker; 
+and the P2P Daemon (\texttt{p2p\_daemon.py}) monitors the health of direct TCP connections.
+
+This multi-layered approach ensures that failures are contained and resolved gracefully. 
+For example, a user closing their browser (UC4) represents a high-level event detected by the backend’s heartbeat mechanism, 
+whereas a sudden network partition between two peers (UC6) is a low-level event detected by the daemons’ keepalive protocol.
+
+The correctness of these handling mechanisms has been verified through a comprehensive suite of test scenarios documented in \texttt{README\_P2P.md}. This document includes both unit-style curl commands to simulate specific API calls (e.g., Test 1.2: Invalid Login) and end-to-end procedures that replicate complex failure conditions such as the 45-second peer timeout (UC04). This rigorous testing confirms that the system behaves reliably under both normal and adverse operating conditions.

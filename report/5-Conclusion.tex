@@ -1,0 +1,49 @@
+\section{Conclusion}
+
+This project successfully bridged the theoretical foundations of computer networking with hands-on system implementation. 
+By developing a hybrid chat system from the ground up, the project demonstrated a comprehensive understanding of key networking paradigms—Client–Server and Peer-to-Peer (P2P)—and their practical integration into a cohesive, multi-process application. 
+The resulting system not only satisfied the technical specifications of the assignment but also offered valuable insights into the challenges of designing reliable distributed systems.
+
+\subsection{Summary of Achievements}
+
+The project achieved all primary objectives outlined in the assignment description, delivering a fully functional and compliant implementation. 
+The main accomplishments are summarized below:
+
+\subsubsection{Complete HTTP Server and Session Management}
+A multithreaded HTTP server was implemented entirely from scratch, capable of handling request parsing, routing, and static content delivery. 
+A robust cookie-based session mechanism was built to maintain user authentication state across the stateless HTTP protocol, meeting the functional requirements of Tasks~1A and~1B.
+
+\subsubsection{Hybrid Client–Server and Peer-to-Peer Architecture}
+The system integrates a centralized Client–Server model—used for authentication, peer discovery, and state management—with a decentralized P2P network layer for direct, low-latency communication. 
+This architecture fulfills the objectives of Task~2 by demonstrating how hybrid systems can combine reliability with efficiency in real-time data exchange.
+
+\subsubsection{Multi-Process Integration}
+All system components—the reverse proxy, the backend application server, and the per-user P2P daemons—were successfully integrated into a unified network environment. 
+These independent processes interact through well-defined HTTP and TCP interfaces, illustrating the ability to design, coordinate, and test complex multi-process communication flows, as expected in Task~3.
+
+\subsubsection{Full Compliance with Assignment Constraints}
+The entire project adheres strictly to the assignment’s restrictions: no use of external libraries, frameworks, or WebSocket-based communication. 
+All networking features were implemented using only the Python standard library, relying on modules such as \texttt{socket}, \texttt{threading}, and \texttt{mimetypes}. 
+This compliance required deep engagement with low-level network programming concepts, manual protocol definition, and concurrency management.
+
+\subsection{Lessons Learned}
+
+The development process yielded several critical lessons that extend beyond theoretical understanding and directly contribute to practical engineering competence.
+
+\subsubsection{The Synergy and Challenge of Integrating Protocols}
+Building an "HTTP Bridge" that links browser-based HTTP communication with low-level TCP socket exchanges offered invaluable insight into the interplay between networking layers. 
+This experience demonstrated how protocol design can be used creatively to overcome real-world constraints—such as browser restrictions—while preserving communication efficiency and correctness.
+
+\subsubsection{The Criticality of Concurrent Programming and State Management}
+Implementing a server capable of handling multiple clients concurrently emphasized the challenges of concurrency in network programming. 
+Through direct experience with Python’s \texttt{threading} module and synchronization primitives like \texttt{RLock}, the project reinforced best practices for ensuring thread safety and preventing race conditions in shared resources (e.g., the Tracker’s peer registry).
+
+\subsubsection{The Foundational Role of Protocol Design}
+Defining custom protocols for P2P connection establishment (\texttt{CONNECT/ACCEPT}) and connection maintenance (\texttt{PING/PONG}) highlighted that clear, well-specified protocols form the backbone of reliable distributed systems. 
+A precise protocol definition simplifies implementation, facilitates debugging, and ensures consistent interpretation of events between communicating peers. 
+This reinforced the understanding that sound protocol and architectural design are essential first steps in developing scalable and fault-tolerant network applications.
+
+\vspace{0.5em}
+In conclusion, the project fully achieved its objectives by successfully transforming core networking principles into a functioning hybrid communication system. 
+It demonstrated technical competence in socket programming, concurrency, and protocol design—precisely the outcomes intended by the Computer Networks course. 
+Beyond meeting assignment requirements, it provided an invaluable foundation for future exploration of scalable, internet-wide distributed architectures.

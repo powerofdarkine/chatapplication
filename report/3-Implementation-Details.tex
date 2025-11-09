@@ -1,0 +1,232 @@
+\section{Implementation Details}
+
+\subsection{Source Code and Directory Structure}
+
+The system’s codebase is organized into a set of modular components, each encapsulating a distinct layer of functionality. 
+This clear separation of concerns enhances maintainability, simplifies debugging, and reflects the architectural hierarchy of the system. 
+Table~\ref{tab:source-code-structure} summarizes the purpose and responsibilities of the principal source files and directories.
+% You might need to add \usepackage{longtable} to your preamble
+\begin{longtable}{|p{4cm}|p{10cm}|}
+
+\caption{Roles and responsibilities of major source code files.}
+\label{tab:source-code-structure} \\
+
+\hline
+\textbf{File / Directory} & \textbf{Description} \\ 
+\hline
+\endfirsthead
+
+\caption[]{-- continued from previous page} \\
+\hline
+\textbf{File / Directory} & \textbf{Description} \\ 
+\hline
+\endhead
+
+\hline 
+\multicolumn{2}{r}{{Continued on next page}} \\ 
+\endfoot
+
+\hline
+\endlastfoot
+
+% The table body starts here
+\texttt{daemon/proxy.py} & Implements a multithreaded reverse proxy that serves as the single entry point for all client traffic. 
+It listens on port~8080 and forwards incoming HTTP requests to the backend server according to the routing rules defined in \texttt{proxy.conf}. \\ 
+\hline
+\texttt{daemon/backend.py} & Provides the foundational low-level TCP server class responsible for accepting raw socket connections and delegating them to a higher-level request handler. 
+This module abstracts generic networking behavior without embedding application-specific logic. \\ 
+\hline
+\texttt{daemon/weaprous.py} & A lightweight, custom-built web framework supplied as part of the assignment. 
+It enables RESTful API development by allowing registration of URL routes and mapping them to corresponding handler functions (e.g., \texttt{@app.route}). \\ 
+\hline
+\texttt{daemon/p2p\_daemon.py} & The core module implementing peer-to-peer functionality. 
+An instance of this class runs for each authenticated user, managing direct TCP connections with other peers. 
+It supports the custom \texttt{CONNECT}/\texttt{ACCEPT} handshake and enforces the \texttt{PING}/\texttt{PONG} keepalive protocol. \\ 
+\hline
+\texttt{start\_sampleapp.py} & Serves as the main application server and the \textit{HTTP Bridge}. 
+It defines all REST API endpoints for authentication, peer discovery, and P2P orchestration using the WeApRous framework. 
+This module acts as the intermediary between the browser-based frontend and the background P2P daemons. \\ 
+\hline
+\texttt{static/js/chat.js} & The client-side JavaScript component responsible for rendering the user interface, handling interactions, and maintaining communication with the backend. 
+It implements asynchronous long-polling mechanisms to receive real-time events and message updates from the server. \\ 
+\hline
+\texttt{daemon/tracker.py} & A central state management module that maintains a thread-safe, in-memory registry of all connected peers. 
+It monitors peer status, coordinates connection updates, and enforces the 45-second heartbeat timeout for detecting inactive or disconnected clients. \\ 
+
+\end{longtable}
+
+\subsection{Core Module Implementations}
+
+The system’s functionality is realized through three principal modules, each responsible for a distinct architectural layer: 
+the low-level peer-to-peer (P2P) communication layer, the high-level HTTP application server, and the client-side web interface. 
+This modular decomposition ensures a clear separation of responsibilities and facilitates scalability, testing, and maintenance.
+
+\subsubsection{Backend -- P2P Daemon}
+
+The decentralized communication layer is implemented in \texttt{p2p\_daemon.py}. 
+An instance of the \texttt{P2PDaemon} class is spawned for each authenticated user, operating as an independent, multithreaded process that manages all direct TCP interactions between peers.
+
+\paragraph{Connection Management:}
+The daemon concurrently handles both inbound and outbound TCP connections. 
+An internal \texttt{\_accept\_loop} thread continuously listens for incoming connection requests from other peers. 
+When a request is detected, it is delegated to \texttt{\_handle\_incoming\_connection}, which performs the server-side handshake sequence (\texttt{CONNECT}~$\rightarrow$~\texttt{ACCEPT}/\texttt{REJECT}).  
+For outbound connections, the \texttt{connect\_to\_peer()} method initiates the client-side handshake, establishing a verified communication channel with the target peer.
+
+\paragraph{Message Loops and Timeout Detection:}
+For each established P2P session, a dedicated \texttt{\_message\_loop} thread is created. 
+This loop operates on a non-blocking socket configured with a 30-second idle timeout (\texttt{IDLE\_TIMEOUT}) to detect inactivity. 
+Simultaneously, a \texttt{\_keepalive\_thread} periodically transmits a \texttt{PING} message every 10~seconds (\texttt{KEEPALIVE\_INTERVAL}). 
+Together, these mechanisms enable robust detection of broken or unresponsive connections and ensure timely cleanup of inactive sessions.
+
+\paragraph{Concurrency and Thread Safety:}
+The module is heavily multithreaded to achieve full non-blocking operation. 
+To prevent race conditions when managing the shared dictionary of active connections, all accesses are synchronized using \texttt{threading.RLock}. 
+Incoming messages from peers are not processed inline but are instead forwarded to the main backend process through a thread-safe callback system, ensuring isolation between the networking and application layers.
+
+\subsubsection{Backend -- HTTP Bridge}
+
+The \texttt{start\_sampleapp.py} file serves as the main application server and acts as the critical "HTTP Bridge" that links the browser-based frontend with the P2P communication layer. 
+It utilizes the \texttt{WeApRous} framework to define and manage all RESTful API endpoints. 
+The module translates stateless HTTP requests into stateful operations performed by the corresponding \texttt{P2PDaemon} instance.
+
+\paragraph{Key API Endpoints:}
+\begin{itemize}
+    \item \textbf{/api/p2p-connect:} Coordinates the P2P connection process. 
+    It receives a request from the frontend, validates the target peer, and invokes the \texttt{connect\_to\_peer()} method on the appropriate daemon.
+    \item \textbf{/api/p2p-send:} Relays chat messages. 
+    It accepts message data from a frontend \texttt{POST} request and passes it to the \texttt{send\_message()} method of the sender’s daemon, which then transmits the message over the established TCP socket.
+    \item \textbf{/api/p2p-receive:} Implements the server-side endpoint for message polling. 
+    When a P2P daemon receives a \texttt{CHAT} message, it enqueues the message in a user-specific, thread-safe queue (\texttt{message\_queues}). 
+    The frontend periodically polls this endpoint to retrieve queued messages and update the chat interface.
+\end{itemize}
+
+By abstracting the P2P subsystem behind a clean HTTP API, this module effectively overcomes browser-imposed restrictions on direct TCP socket access while preserving real-time responsiveness through asynchronous polling.
+
+\subsubsection{Frontend -- Chat Web Application}
+
+The client-side interface is implemented in \texttt{chat.js}, a lightweight JavaScript application responsible for rendering the user interface, processing user interactions, and maintaining communication with the backend.
+
+\paragraph{Polling Mechanisms:}
+The application simulates real-time communication through asynchronous polling routines executed at fixed intervals:
+\begin{itemize}
+    \item \textbf{pollPeerEvents():} Polls the \texttt{/api/broadcast-peer} endpoint every 3~seconds to receive updates on peers joining or leaving the network.
+    \item \textbf{pollMessages():} Polls the \texttt{/api/p2p-receive} endpoint every 2~seconds to fetch newly received chat messages from the user’s server-side queue.
+    \item \textbf{pollConnectionRequests()} and \textbf{pollConnectionResponses():} Manage the multi-step P2P connection handshake by polling connection request and response states.
+\end{itemize}
+
+\paragraph{UI and State Management:}
+The script maintains client-side state through global variables such as \texttt{currentUser}, \texttt{activePeer}, and \texttt{connectedPeers}. 
+It dynamically updates the Document Object Model (DOM) to reflect peer availability, connection status, and new message arrivals. 
+Functions like \texttt{appendMessage()} and \texttt{updateConnectionStatus()} ensure that the interface remains synchronized with the backend and accurately reflects the state of the underlying network.
+
+This frontend module, together with the backend bridge and P2P daemons, forms a cohesive end-to-end communication loop that supports real-time peer discovery, messaging, and fault-tolerant connectivity.
+
+
+\subsection{Exception Handling and Debugging}
+
+During development, several critical issues were identified and resolved to improve system stability and user experience. 
+The debugging process provided significant insights into the challenges of asynchronous, multi-threaded, and multi-layered network applications. 
+The three most notable bugs, as documented in the project’s \texttt{README.md}, are detailed below.
+
+\subsubsection{Bug \#1: Indefinite Wait on Rejected Connection}
+
+\paragraph{Problem Description:}
+Initially, when User~A sent a connection request to User~B and User~B explicitly clicked ``Reject,’’ 
+User~A’s interface would remain indefinitely stuck on a ``Waiting for response...’’ message. 
+There was no mechanism to notify User~A that their request had been denied.
+
+\paragraph{Root Cause Analysis:}
+The system correctly implemented connection acceptance but lacked a complementary workflow for rejection handling. 
+The backend did not record or forward rejection events, and the frontend had no endpoint to query for such status updates. 
+As a result, the requesting client never received confirmation that the peer had refused the connection.
+
+\paragraph{Solution:}
+A complete rejection-handling workflow was introduced to address this issue:
+\begin{itemize}
+    \item \textbf{Backend:} A new list, \texttt{connection\_responses}, was added to \texttt{start\_sampleapp.py} to temporarily store both acceptance and rejection events. 
+    A new API endpoint, \texttt{/api/p2p-get-responses}, was created to allow clients to retrieve these events.
+    \item \textbf{Frontend:} A new polling function, \texttt{pollConnectionResponses()}, was implemented in \texttt{static/js/chat.js}, invoking the new endpoint every two seconds.
+    \item \textbf{Logic:} When the frontend receives a rejection response, it immediately updates the user interface with a message (``Request rejected’’), closes the active chat window after a two-second delay, and redirects the user to the welcome screen.
+\end{itemize}
+
+\paragraph{Verification:}  
+Testing was performed by having User~A initiate a connection while User~B clicked ``Reject.’’ 
+User~A’s screen correctly displayed the rejection message, and the chat window closed as expected, confirming the fix’s effectiveness.
+
+\subsubsection{Bug \#2: Chat Input Field Overlapped by Footer}
+
+\paragraph{Problem Description:}
+In the chat interface, when the number of messages exceeded the visible area, 
+the message input field became obscured behind the application footer, 
+preventing users from typing new messages once the chat history expanded.
+
+\paragraph{Root Cause Analysis:}
+This issue stemmed from incorrect CSS flexbox behavior. 
+The parent container (\texttt{.chat-active}) did not properly constrain the height of its child elements, 
+causing the message container to expand indefinitely and push the input field out of view.
+
+\paragraph{Solution:}
+The correction was implemented entirely in the CSS file \texttt{\seqsplit{static/css/chat.css}}:
+\begin{itemize}
+    \item The property \texttt{min-height: 0;} was applied to both \texttt{.chat-active} and \texttt{\seqsplit{.messages-container}} flex items to ensure they respected the parent container’s height constraints.
+    \item The property \texttt{overflow: hidden;} was added to \texttt{.chat-active} to prevent unintended overflow beyond the viewport.
+\end{itemize}
+
+\noindent\textbf{Verification:}  
+After applying the fix, the message container became independently scrollable, while the input field and ``Send’’ button remained fixed and visible at the bottom of the interface. 
+Extensive testing confirmed that the layout behaved correctly regardless of message volume or window size.
+
+\subsubsection{Bug \#3: Peer Not Notified When a Session Ends}
+
+\paragraph{Problem Description:}
+When User~A manually terminated a P2P session (e.g., by clicking an ``End Session’’ button), 
+User~B received no notification. 
+User~B’s chat window remained active, allowing further message input even though the connection had already been closed by the peer.
+
+\paragraph{Root Cause Analysis:}
+The initial implementation closed the TCP socket on User~A’s side without sending a termination notice to User~B. 
+Consequently, the daemon on User~B’s end only detected the disconnection after the 30-second PING/PONG timeout, 
+resulting in a delayed and confusing user experience.
+
+\paragraph{Solution:}
+A graceful disconnection workflow was added using the existing \texttt{CLOSE} message type in the P2P protocol:
+\begin{itemize}
+    \item \textbf{Protocol Enhancement:} The \texttt{CLOSE} message type was explicitly used to signal the end of a session.
+    \item \textbf{Daemon Logic:} The P2P Daemon (\texttt{p2p\_daemon.py}) was modified to send a \texttt{CLOSE} message before closing its local socket.
+    \item \textbf{Backend Bridge:} The backend server was updated to forward incoming \texttt{CLOSE} messages to the recipient’s message queue, just like standard \texttt{CHAT} messages.
+    \item \textbf{Frontend Handling:} The \texttt{pollMessages()} function in \texttt{chat.js} now detects messages of type \texttt{CLOSE}. 
+    Upon receiving one, it triggers \texttt{handleRemoteSessionEnd()}, which displays a notification ("Peer has ended the session"), disables the input field, and updates the interface to reflect the terminated connection.
+\end{itemize}
+
+\noindent\textbf{Verification:}  
+After implementing this protocol enhancement, User~B’s interface immediately displayed a "Session ended by peer" message as soon as User~A terminated the connection. 
+The input field was correctly disabled, and the UI state accurately reflected the end of the session, ensuring immediate and consistent feedback to both participants.
+
+\subsection{Programming Standards and Compliance}
+
+Adherence to professional programming standards and strict compliance with assignment constraints were maintained throughout the development of this project. 
+The entire codebase was written to emphasize clarity, maintainability, and correctness, ensuring that the implementation remains consistent with both academic and industry best practices.
+
+\subsubsection{Code Style and Documentation}
+All Python source code strictly conforms to the \textbf{PEP~8} style guide, promoting uniform formatting, consistent naming conventions, and improved readability. 
+Each major function, class, and module includes docstrings following the \textbf{PEP~257} convention, specifying their purpose, parameters, and return values. 
+This disciplined approach makes the system largely self-documenting, facilitating ease of understanding and future extension.
+
+\subsubsection{Standard Library Exclusivity}
+In accordance with the assignment’s requirements, the entire project was implemented exclusively using the Python standard library. 
+No third-party packages or external dependencies were installed or imported. 
+The implementation primarily utilizes the following modules:
+\begin{itemize}
+    \item \texttt{socket} --- for low-level TCP/IP communication and connection management.
+    \item \texttt{threading} --- for concurrent execution and thread synchronization.
+    \item \texttt{argparse} --- for parsing command-line arguments and runtime configuration.
+    \item \texttt{mimetypes} --- for dynamically identifying and serving static content with appropriate MIME types.
+\end{itemize}
+This design choice not only satisfies the assignment’s restrictions but also demonstrates mastery of Python’s built-in networking and concurrency capabilities.
+
+\subsubsection{Framework-Free Implementation}
+The system deliberately avoids high-level web frameworks such as Flask or Django. 
+All HTTP server components, including request parsing, response generation, and routing logic, were developed manually using the provided \textit{WeApRous} micro-framework and core modules. 
+This framework-free design ensures complete compliance with the assignment’s guidelines while highlighting the developers’ understanding of fundamental networking principles, protocol structures, and server architecture.
+
+Overall, this strict adherence to programming and compliance standards underscores the project’s emphasis on foundational competence, reproducibility, and technical transparency.

@@ -1,0 +1,2386 @@
+[Tracker] Initialized
+[Tracker] Cleanup loop started
+[Tracker] Cleanup thread started
+[SampleApp] Starting on 127.0.0.1:9001
+[SampleApp] Available users: ['admin', 'user1', 'user2']
+[Backend] Listening on port 9001
+[Backend] route settings {('POST', '/login'): <function handle_login at 0x00000197C70C0720>, ('GET', '/logout'): <function handle_logout at 0x00000197C70C0860>, ('POST', '/logout'): <function handle_logout at 0x00000197C70C0860>, ('GET', '/api/user'): <function get_user_info at 0x00000197C70C0900>, ('POST', '/api/submit-info'): <function submit_peer_info at 0x00000197C70C0A40>, ('GET', '/api/get-list'): <function get_peer_list at 0x00000197C70C0AE0>, ('POST', '/api/connect-peer'): <function connect_peer at 0x00000197C70C07C0>, ('POST', '/api/broadcast-peer'): <function broadcast_peer_events at 0x00000197C70C0B80>, ('POST', '/api/heartbeat'): <function heartbeat at 0x00000197C70C0C20>, ('GET', '/api/peers'): <function get_peers at 0x00000197C70C0CC0>, ('POST', '/api/p2p-request'): <function p2p_request at 0x00000197C70C0D60>, ('GET', '/api/p2p-get-requests'): <function p2p_get_requests at 0x00000197C70C0E00>, ('POST', '/api/p2p-accept'): <function p2p_accept at 0x00000197C70C0EA0>, ('GET', '/api/p2p-get-responses'): <function p2p_get_responses at 0x00000197C70C0F40>, ('POST', '/api/p2p-reject'): <function p2p_reject at 0x00000197C70C0FE0>, ('POST', '/api/p2p-connect'): <function p2p_connect at 0x00000197C70C1080>, ('POST', '/api/p2p-send'): <function p2p_send at 0x00000197C70C1120>, ('POST', '/api/p2p-receive'): <function p2p_receive at 0x00000197C70C11C0>, ('POST', '/api/p2p-disconnect'): <function p2p_disconnect at 0x00000197C70C1260>, ('GET', '/api/p2p-status'): <function p2p_status at 0x00000197C70C1300>, ('POST', '/api/message'): <function send_message at 0x00000197C70C13A0>}
+[Backend] Accepted connection from ('127.0.0.1', 63509)
+[Request] GET path /login.html version HTTP/1.1
+[Response] MIME negotiated main_type=text sub_type=html
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\www\login.html
+[Backend] Accepted connection from ('127.0.0.1', 64254)
+[Request] GET path /css/login.css version HTTP/1.1
+[Response] MIME negotiated main_type=text sub_type=css
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\css\login.css
+[Backend] Accepted connection from ('127.0.0.1', 50119)
+[Request] POST path /login version HTTP/1.1
+[HttpAdapter] hook in route-path METHOD POST PATH /login
+[SampleApp] Logging in <daemon.dictionary.CaseInsensitiveDict object at 0x00000197C710D1F0> to username=user1&password=pass123
+[SampleApp] Login attemp - username: 'user1'
+[SampleApp] Login Success for 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 50120)
+[Request] GET path /index.html version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /index.html
+[Response] MIME negotiated main_type=text sub_type=html
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\www\index.html
+[Backend] Accepted connection from ('127.0.0.1', 63577)
+[Request] GET path /css/chat.css version HTTP/1.1
+[Response] MIME negotiated main_type=text sub_type=css
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\css\chat.css
+[Backend] Accepted connection from ('127.0.0.1', 63578)
+[Request] GET path /js/chat.js version HTTP/1.1
+[Response] MIME negotiated main_type=application sub_type=javascript
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\js\chat.js
+[Backend] Accepted connection from ('127.0.0.1', 56924)
+[Request] GET path /api/user version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/user
+[HttpAdapter] hook in route-path METHOD GET PATH /api/user
+D:\school\HK251\network\lab\Assignment\CO3094-weaprous\start_sampleapp.py:186: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+  'timestamp': __import__('datetime').datetime.utcnow().isoformat()
+[Backend] Accepted connection from ('127.0.0.1', 51291)
+[Request] POST path /api/submit-info version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/submit-info
+[HttpAdapter] hook in route-path METHOD POST PATH /api/submit-info
+[Debug] Body received: '{"display_name":"user1","channels":["general"]}'
+[Debug] Body type: <class 'str'>
+[P2P] Daemon initialized for peer 'user1' on 0.0.0.0:9101
+[P2P] Listening on 0.0.0.0:9101
+[P2P] Accept loop started
+[P2P] Keepalive loop started
+[P2P] Daemon started successfully
+[SampleApp] P2P daemon created for 'user1' on port 9101
+[Tracker] Peer joined: user1 (user1) at 127.0.0.1:9101
+[SampleApp] Peer registered: user1 at 127.0.0.1:9101
+[Backend] Accepted connection from ('127.0.0.1', 54268)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 0 peers
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Backend] Accepted connection from ('127.0.0.1', 56424)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56425)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 64878)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 55488)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 55489)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 55490)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 51339)
+[Backend] Accepted connection from ('127.0.0.1', 51340)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 0 peers
+[Backend] Accepted connection from ('127.0.0.1', 58940)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 58941)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58942)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 58943)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 56975)
+[Request] GET path /index.html version HTTP/1.1
+[HttpAdapter] Unauthorized access attempt to /index.html from ('127.0.0.1', 56975)
+[Backend] Accepted connection from ('127.0.0.1', 61931)
+[Request] GET path /login.html version HTTP/1.1
+[Response] MIME negotiated main_type=text sub_type=html
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\www\login.html
+[Backend] Accepted connection from ('127.0.0.1', 56847)
+[Request] GET path /css/login.css version HTTP/1.1
+[Response] MIME negotiated main_type=text sub_type=css
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\css\login.css
+[Backend] Accepted connection from ('127.0.0.1', 51647)
+[Request] GET path /favicon.ico version HTTP/1.1
+[Response] MIME negotiated main_type=image sub_type=x-icon
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\images\favicon.ico
+[Backend] Accepted connection from ('127.0.0.1', 53608)
+[Backend] Accepted connection from ('127.0.0.1', 53609)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53610)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 60142)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 61141)
+[Backend] Accepted connection from ('127.0.0.1', 61142)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61143)
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 0 peers
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61144)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 61145)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 63451)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 63452)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 63453)
+[Backend] Accepted connection from ('127.0.0.1', 63454)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 64834)
+[Request] POST path /login version HTTP/1.1
+[HttpAdapter] hook in route-path METHOD POST PATH /login
+[SampleApp] Logging in <daemon.dictionary.CaseInsensitiveDict object at 0x00000197C6DF76E0> to username=user2&password=pass456
+[SampleApp] Login attemp - username: 'user2'
+[SampleApp] Login Success for 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 51837)
+[Request] GET path /index.html version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /index.html
+[Response] MIME negotiated main_type=text sub_type=html
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\www\index.html
+[Backend] Accepted connection from ('127.0.0.1', 51483)
+[Backend] Accepted connection from ('127.0.0.1', 51484)
+[Request] GET path /css/chat.css version HTTP/1.1
+[Response] MIME negotiated main_type=text sub_type=css
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\css\chat.css
+[Request] GET path /js/chat.js version HTTP/1.1
+[Response] MIME negotiated main_type=application sub_type=javascript
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\js\chat.js
+[Backend] Accepted connection from ('127.0.0.1', 50060)
+[Request] GET path /api/user version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/user
+[HttpAdapter] hook in route-path METHOD GET PATH /api/user
+[Backend] Accepted connection from ('127.0.0.1', 50061)
+[Request] GET path /favicon.ico version HTTP/1.1
+[Response] MIME negotiated main_type=image sub_type=x-icon
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\images\favicon.ico
+[Backend] Accepted connection from ('127.0.0.1', 54253)
+[Request] POST path /api/submit-info version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/submit-info
+[HttpAdapter] hook in route-path METHOD POST PATH /api/submit-info
+[Debug] Body received: '{"display_name":"user2","channels":["general"]}'
+[Debug] Body type: <class 'str'>
+[P2P] Daemon initialized for peer 'user2' on 0.0.0.0:9102
+[P2P] Listening on 0.0.0.0:9102
+[P2P] Accept loop started
+[P2P] Keepalive loop started
+[P2P] Daemon started successfully
+[SampleApp] P2P daemon created for 'user2' on port 9102
+[Tracker] Peer joined: user2 (user2) at 127.0.0.1:9102
+[SampleApp] Peer registered: user2 at 127.0.0.1:9102
+[Backend] Accepted connection from ('127.0.0.1', 53392)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 60248)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60249)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60250)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 55165)
+[Request] POST path /api/heartbeat version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 55166)
+[HttpAdapter] Authenticated user 'user1' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user1, expired: []
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 55167)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 1 events since 0
+[Request] GET path /api/p2p-status version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 55168)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Backend] Accepted connection from ('127.0.0.1', 56424)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56425)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 54449)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54450)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 54451)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 57732)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 52373)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52374)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52375)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 53125)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 60265)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60266)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60267)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56424)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 53829)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53830)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 53831)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 53832)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 55553)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 55554)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 55555)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 55556)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 55557)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 54673)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 53352)
+[Backend] Accepted connection from ('127.0.0.1', 53353)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 53354)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 62571)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 62572)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62573)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 60612)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[Backend] Accepted connection from ('127.0.0.1', 56424)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56425)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[SampleApp] 'user2' polled 0 messages
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 56426)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56427)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 58962)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58963)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58964)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58965)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 50138)
+[Backend] Accepted connection from ('127.0.0.1', 50139)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 53515)
+[Request] POST path /api/p2p-request version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-request
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-request
+[SampleApp] 'user1' sent connection request to 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 61362)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62643)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58076)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 58077)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 54180)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 54181)
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 54182)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 52710)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 65233)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65234)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 65235)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61713)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61714)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[SampleApp] 'user2' polled 0 messages
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 54529)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54530)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54531)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[Request] POST path /api/heartbeat version HTTP/1.1
+[SampleApp] get-list for user2: 1 peers
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[Backend] Accepted connection from ('127.0.0.1', 54532)
+[SampleApp] heartbeat from user2, expired: []
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 63720)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63721)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 53381)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53382)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53383)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] POST path /api/heartbeat version HTTP/1.1
+[SampleApp] 'user1' polled 0 messages
+[HttpAdapter] Authenticated user 'user1' accessing /api/heartbeat
+[Backend] Accepted connection from ('127.0.0.1', 53384)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user1, expired: []
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53385)
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 53386)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53462)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 56599)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56600)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 56601)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 54378)
+[Backend] Accepted connection from ('127.0.0.1', 54379)
+[Backend] Accepted connection from ('127.0.0.1', 54380)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 61597)
+[Request] POST path /api/p2p-accept version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-accept
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-accept
+[P2P] Connecting to 'user1' at 127.0.0.1:9101
+[P2P] Incoming connection from ('127.0.0.1', 61598)
+[P2P] Accepted connection from 'user2'
+[P2P] 'user1' connected to 'user2'
+[P2P] Connected to 'user1'
+[P2P] Message loop started for 'user2'
+[P2P] 'user2' connected to 'user1'
+[P2P] Message loop started for 'user1'
+[SampleApp] 'user2' accepted connection from 'user1'
+[P2P] Sent PING to 'user1'
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 62654)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62655)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62656)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62657)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 62658)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 50727)
+[Request] GET path /favicon.ico version HTTP/1.1
+[Response] MIME negotiated main_type=image sub_type=x-icon
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\images\favicon.ico
+[Backend] Accepted connection from ('127.0.0.1', 65040)
+[Backend] Accepted connection from ('127.0.0.1', 65041)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65042)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60759)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 51873)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 51874)
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[Request] GET path /api/p2p-status version HTTP/1.1
+[SampleApp] get-list for user1: 1 peers
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 63091)
+[Request] GET path /favicon.ico version HTTP/1.1
+[Response] MIME negotiated main_type=image sub_type=x-icon
+[Response] Serving static path: D:\school\HK251\network\lab\Assignment\CO3094-weaprous\static\images\favicon.ico
+[Backend] Accepted connection from ('127.0.0.1', 52059)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52060)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52061)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 57478)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57479)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57480)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 57481)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 51976)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 51977)
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 51978)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 51979)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 58482)
+[Backend] Accepted connection from ('127.0.0.1', 58483)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 58484)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[SampleApp] 'user1' polled 0 messages
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 50096)
+[Backend] Accepted connection from ('127.0.0.1', 50097)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 64697)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 62054)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 62055)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62056)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 64319)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 64320)
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 64321)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[SampleApp] 'user1' polled 0 messages
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 64322)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 64323)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[P2P] Sent PING to 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 49341)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 49342)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 49343)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 63332)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63333)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63334)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63335)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 65018)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65019)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65020)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65021)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 62227)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62228)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 62229)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] POST path /api/heartbeat version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user2, expired: []
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PING to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 56678)
+[Backend] Accepted connection from ('127.0.0.1', 56679)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56680)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 49805)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 49806)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 49807)
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[Backend] Accepted connection from ('127.0.0.1', 49808)
+[SampleApp] get-list for user1: 1 peers
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] POST path /api/heartbeat version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user1, expired: []
+[Backend] Accepted connection from ('127.0.0.1', 65170)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65171)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65172)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 62026)
+[Backend] Accepted connection from ('127.0.0.1', 62027)
+[Backend] Accepted connection from ('127.0.0.1', 62028)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 62107)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 50443)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 50444)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 50445)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 64103)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 64104)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 64105)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 64106)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 63350)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63351)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 62833)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62834)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62835)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 62836)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[SampleApp] 'user2' polled 0 messages
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 61338)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61339)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 61340)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61341)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61342)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[P2P] Sent PING to 'user2'
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 52108)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 59706)
+[Backend] Accepted connection from ('127.0.0.1', 59707)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 59708)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 59136)
+[Backend] Accepted connection from ('127.0.0.1', 59137)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 59138)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 57017)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 57611)
+[Backend] Accepted connection from ('127.0.0.1', 57612)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 57613)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57614)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57615)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[P2P] Sent PING to 'user1'
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 62570)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62571)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 62572)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 62573)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60445)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60446)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 58318)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 58319)
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58320)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58321)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Backend] Accepted connection from ('127.0.0.1', 56424)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56426)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 54389)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 56691)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56692)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 56693)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 60351)
+[Backend] Accepted connection from ('127.0.0.1', 60352)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60353)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 53126)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53127)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53128)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 53129)
+[Request] POST path /api/heartbeat version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user2, expired: []
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 56713)
+[Backend] Accepted connection from ('127.0.0.1', 56714)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56715)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[SampleApp] 'user2' polled 0 messages
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 52501)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52502)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 52503)
+[Request] POST path /api/heartbeat version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52504)
+[HttpAdapter] Authenticated user 'user1' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user1, expired: []
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52505)
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[Backend] Accepted connection from ('127.0.0.1', 52506)
+[SampleApp] get-list for user1: 1 peers
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 49565)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[P2P] Sent PING to 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 53609)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 53610)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 53611)
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53612)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 60937)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60938)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60939)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 54235)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 61137)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61138)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61139)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 61140)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61141)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PING to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 53803)
+[Request] POST path /api/p2p-send version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-send
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-send
+[P2P] Sent CHAT to 'user2'
+[SampleApp] 'user1' sent CHAT to 'user2'
+[P2P] ← CHAT from 'user1'
+[P2P→Queue] Message from 'user1' queued for 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 52979)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52980)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52981)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[SampleApp] 'user1' polled 0 messages
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 64560)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 54495)
+[Backend] Accepted connection from ('127.0.0.1', 54496)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 62136)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62137)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 1 messages
+[Backend] Accepted connection from ('127.0.0.1', 62138)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 49474)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 49475)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 49476)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 49477)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 61123)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 61124)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61125)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61126)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 53025)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53026)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 53027)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 63877)
+[Backend] Accepted connection from ('127.0.0.1', 63878)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 58755)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 54511)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54512)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 54513)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 64989)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 64990)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 64991)
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 64992)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 64993)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[P2P] Sent PING to 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 49800)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 65276)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65277)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65278)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 60867)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 60868)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 60869)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 60870)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 56423)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 56424)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 56425)
+[Request] POST path /api/heartbeat version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56426)
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user2, expired: []
+[Backend] Accepted connection from ('127.0.0.1', 59389)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 59390)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 59391)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PING to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 61473)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61474)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 61475)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[SampleApp] 'user1' polled 0 messages
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 53856)
+[Request] POST path /api/heartbeat version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[SampleApp] heartbeat from user1, expired: []
+[Backend] Accepted connection from ('127.0.0.1', 53857)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 53859)
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 53860)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 60087)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60088)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60089)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 52764)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 52765)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52766)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 62127)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 52442)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 52443)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 52444)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 56913)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56914)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56915)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56916)
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 63237)
+[Backend] Accepted connection from ('127.0.0.1', 63238)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 63158)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63159)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63160)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63161)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 65195)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user1' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 65196)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user1: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 65197)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65198)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-status version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65199)
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[P2P] Sent PING to 'user2'
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 50277)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user1' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user1: 0 events since 1762689260851
+[Backend] Accepted connection from ('127.0.0.1', 56691)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56692)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56693)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 57110)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 56796)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 56797)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56798)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56799)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56800)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PING to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 50771)
+[Backend] Accepted connection from ('127.0.0.1', 50772)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 50773)
+[Backend] Accepted connection from ('127.0.0.1', 50774)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 62598)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62599)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 62600)
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 54380)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 54381)
+[Backend] Accepted connection from ('127.0.0.1', 54382)
+[Request] POST path /api/heartbeat version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54383)
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[Request] GET path /api/p2p-status version HTTP/1.1
+[SampleApp] heartbeat from user2, expired: []
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 60631)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60633)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60634)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[P2P] Sent PING to 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 61894)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 61895)
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61896)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61897)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 51991)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57972)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 50618)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 50619)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 50620)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PING to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 49565)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 57870)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57871)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57872)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 50663)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 50664)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 50665)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 50666)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 58032)
+[Backend] Accepted connection from ('127.0.0.1', 58033)
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 56420)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 56421)
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56422)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[P2P] Sent PING to 'user2'
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 60448)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 63715)
+[Backend] Accepted connection from ('127.0.0.1', 63716)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63717)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 52533)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 52534)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52535)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 52536)
+[Request] POST path /api/heartbeat version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52537)
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 52538)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[SampleApp] heartbeat from user2, expired: []
+[Backend] Accepted connection from ('127.0.0.1', 55011)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PING to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 60537)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 60538)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60539)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 56766)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 65121)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 49609)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 64428)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 56736)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[Backend] Accepted connection from ('127.0.0.1', 56737)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 58856)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 58857)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 57153)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 57154)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[P2P] Sent PING to 'user2'
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 59678)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 54430)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54431)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 63704)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[P2P] Sent PING to 'user1'
+[P2P] ← PING from 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PONG to 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 50381)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 65100)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 65175)
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 65176)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[SampleApp] get-list for user2: 1 peers
+[Backend] Accepted connection from ('127.0.0.1', 65177)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 52607)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 51226)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 61875)
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61876)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 65306)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 62605)
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 62606)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 55507)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 65160)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54597)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 1 peers
+[Request] POST path /api/heartbeat version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 54598)
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[Request] GET path /api/p2p-status version HTTP/1.1
+[SampleApp] heartbeat from user2, expired: []
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 63602)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 64481)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 54635)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[P2P] Sent PING to 'user2'
+[P2P] ← PING from 'user1'
+[P2P] Sent PONG to 'user1'
+[P2P] ← PONG from 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 50827)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 53463)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 62584)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 50427)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Tracker] Peer expired: user1 (last seen: 1762689322188)
+[Tracker] Cleaned up 1 expired peers
+[P2P] ← PING from 'user2'
+[P2P] Sent PONG to 'user2'
+[P2P] ← PONG from 'user1'
+[P2P] Sent PING to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 50426)
+[Backend] Accepted connection from ('127.0.0.1', 52430)
+[Request] GET path /api/get-list version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 0 peers
+[Backend] Accepted connection from ('127.0.0.1', 62338)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 61110)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 61109)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 53595)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 1 events since 0
+[Backend] Accepted connection from ('127.0.0.1', 64773)
+[Request] POST path /api/p2p-disconnect version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-disconnect
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-disconnect
+[P2P] ← CLOSE from 'user2'
+[P2P] Sent CLOSE to 'user1'
+[Backend] Accepted connection from ('127.0.0.1', 55187)
+[P2P] Close requested by 'user2'
+[P2P] Error in message loop for 'user1': [WinError 10038] An operation was attempted on something that is not a socket
+[Request] GET path /api/get-list version HTTP/1.1
+[P2P] Disconnected from 'user1'
+[P2P] 'user2' disconnected from 'user1'
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[SampleApp] 'user2' disconnected from 'user1'
+[P2P] 'user2' disconnected from 'user1'
+[P2P→Queue] Message from 'user2' queued for 'user1'
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[P2P] Message loop ended for 'user1'
+[P2P] 'user1' disconnected from 'user2'
+[SampleApp] get-list for user2: 0 peers
+[P2P] Message loop ended for 'user2'
+[Backend] Accepted connection from ('127.0.0.1', 62256)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62257)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 62258)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 53711)
+[Backend] Accepted connection from ('127.0.0.1', 58665)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 58666)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 58667)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 1762689369642
+[Backend] Accepted connection from ('127.0.0.1', 51692)
+[Backend] Accepted connection from ('127.0.0.1', 51693)
+[Request] GET path /api/get-list version HTTP/1.1
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[SampleApp] get-list for user2: 0 peers
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 61925)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 61926)
+[Backend] Accepted connection from ('127.0.0.1', 61927)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 60953)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 1762689369642
+[Backend] Accepted connection from ('127.0.0.1', 64465)
+[Backend] Accepted connection from ('127.0.0.1', 64466)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[SampleApp] 'user2' polled 0 messages
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Backend] Accepted connection from ('127.0.0.1', 64467)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 64209)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 56419)
+[SampleApp] broadcast-peer for user2: 0 events since 1762689369642
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56420)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 0 peers
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 56421)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Request] POST path /api/heartbeat version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53777)
+[HttpAdapter] Authenticated user 'user2' accessing /api/heartbeat
+[HttpAdapter] hook in route-path METHOD POST PATH /api/heartbeat
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53778)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[SampleApp] heartbeat from user2, expired: []
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 63168)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 57816)
+[Backend] Accepted connection from ('127.0.0.1', 57817)
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 57818)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 49409)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 1762689369642
+[Backend] Accepted connection from ('127.0.0.1', 51870)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 51871)
+[SampleApp] 'user2' polled 0 messages
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 51872)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 53215)
+[Request] GET path /api/get-list version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 53216)
+[HttpAdapter] Authenticated user 'user2' accessing /api/get-list
+[HttpAdapter] hook in route-path METHOD GET PATH /api/get-list
+[SampleApp] get-list for user2: 0 peers
+[Request] GET path /api/p2p-status version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-status
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-status
+[Backend] Accepted connection from ('127.0.0.1', 65465)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62583)
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[Backend] Accepted connection from ('127.0.0.1', 62584)
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[Backend] Accepted connection from ('127.0.0.1', 62585)
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[SampleApp] broadcast-peer for user2: 0 events since 1762689369642
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 51582)
+[Request] POST path /api/p2p-receive version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-receive
+[HttpAdapter] hook in route-path METHOD POST PATH /api/p2p-receive
+[Backend] Accepted connection from ('127.0.0.1', 51583)
+[SampleApp] 'user2' polled 0 messages
+[Backend] Accepted connection from ('127.0.0.1', 51584)
+[Request] GET path /api/p2p-get-requests version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-requests
+[Request] GET path /api/p2p-get-responses version HTTP/1.1
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-requests
+[HttpAdapter] Authenticated user 'user2' accessing /api/p2p-get-responses
+[HttpAdapter] hook in route-path METHOD GET PATH /api/p2p-get-responses
+[Backend] Accepted connection from ('127.0.0.1', 54733)
+[Request] POST path /api/broadcast-peer version HTTP/1.1
+[HttpAdapter] Authenticated user 'user2' accessing /api/broadcast-peer
+[HttpAdapter] hook in route-path METHOD POST PATH /api/broadcast-peer
+[SampleApp] broadcast-peer for user2: 0 events since 1762689369642
+
+[Backend] Server shutting down.
+
+D:\school\HK251\network\lab\Assignment\CO3094-weaprous>^A
