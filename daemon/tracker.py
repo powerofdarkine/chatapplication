@@ -1,11 +1,3 @@
-#
-# Copyright (C) 2025 pdnguyen of HCMC University of Technology VNU-HCM.
-# All rights reserved.
-# This file is part of the CO3093/CO3094 course.
-#
-# WeApRous release
-#
-
 """daemon.tracker
 ==================
 
@@ -91,14 +83,12 @@ class Peer:
 
 
 class PeerTracker:
-    """Central tracker for peer discovery and health management.
-
-    The tracker maintains an in-memory map of active peers and a per-peer
-    deque of events that clients can poll. A background cleanup thread
-    periodically removes peers that have not sent a heartbeat within the
-    timeout window and broadcasts "peer-left" events.
     """
-    
+    Central tracker for peer discovery and health management.
+
+    The tracker maintains peers, per-peer event queues and a background
+    cleanup loop to expire stale peers.
+    """
     # Configuration
     HEARTBEAT_TIMEOUT_MS = 45000  # 45 seconds
     CLEANUP_INTERVAL_SEC = 5      # Check every 5 seconds
@@ -115,11 +105,10 @@ class PeerTracker:
         print("[Tracker] Initialized")
     
     def start(self):
-        """Start the background cleanup thread.
+        """
+        Start background cleanup thread.
 
-        Calling :meth:`start` multiple times is safe; only a single thread
-        will be started. The thread is marked as daemon so it won't block
-        process exit.
+        Side-effects: Starts a daemon thread that periodically removes expired peers.
         """
         if not self.running:
             self.running = True
@@ -128,11 +117,10 @@ class PeerTracker:
             print("[Tracker] Cleanup thread started")
     
     def stop(self):
-        """Stop the background cleanup thread and wait briefly for join.
+        """
+        Stop background cleanup thread.
 
-        The join timeout is intentionally small (2s) because this tracker
-        is used in interactive lab runs. The method attempts a graceful
-        stop but does not guarantee termination of blocking operations.
+        Side-effects: Requests thread stop and joins briefly.
         """
         self.running = False
         if self.cleanup_thread:
@@ -140,13 +128,20 @@ class PeerTracker:
             print("[Tracker] Cleanup thread stopped")
     
     def register_peer(self, peer_id, ip, port, display_name, channels=None):
-        """Register a new peer or update an existing peer's metadata.
+        """
+        Register or update a peer.
 
-        If the peer already exists its metadata and last-seen timestamp
-        are updated; otherwise a new ``Peer`` object is created. An
-        event is broadcast to other peers indicating the join/update.
-
-        :returns: JSON-serializable dict of the peer's current state.
+        :param peer_id: peer identifier
+        :type peer_id: str
+        :param ip: peer IP
+        :type ip: str
+        :param port: peer port
+        :type port: int
+        :param display_name: human-friendly name
+        :type display_name: str
+        :param channels: optional list of channels
+        :type channels: list|None
+        :returns: dict serializable peer state
         """
         with self.lock:
             if peer_id in self.peers:
@@ -174,10 +169,13 @@ class PeerTracker:
             return peer.to_dict()
     
     def unregister_peer(self, peer_id):
-        """Unregister a peer and broadcast a peer-left event.
-
-        Returns True if the peer existed and was removed, False otherwise.
         """
+        Unregister a peer and broadcast leave event.
+
+        :param peer_id: peer identifier (str)
+        :returns: True if removed, False otherwise
+        """
+
         with self.lock:
             if peer_id in self.peers:
                 peer = self.peers[peer_id]

@@ -24,7 +24,7 @@ import base64
 from .request import Request
 from .response import Response
 from .dictionary import CaseInsensitiveDict
-from .cookies import parse_cookie_header
+from .http_consts import HEADER_CONTENT_TYPE, HEADER_LOCATION, HEADER_WWW_AUTHENTICATE
 
 class HttpAdapter:
     """
@@ -159,15 +159,15 @@ class HttpAdapter:
                     if is_html_request:
                         resp.status_code = 302
                         resp.reason = "Found"
-                        resp.headers['Location'] = '/login.html'
-                        resp.headers['Content-Type'] = 'text/html; charset=utf-8'
+                        resp.headers[HEADER_LOCATION] = '/login.html'
+                        resp.headers[HEADER_CONTENT_TYPE] = 'text/html; charset=utf-8'
                         resp._content = b'<html><body>Redirecting to <a href="/login.html">login</a></body></html>'
                         resp._has_dynamic_content = True
                     else:
                         resp.status_code = 401
                         resp.reason = "Unauthorized"
-                        resp.headers['Content-Type'] = 'text/plain'
-                        resp.headers['WWW-Authenticate'] = 'Cookie realm="Login Required"'
+                        resp.headers[HEADER_CONTENT_TYPE] = 'text/plain'
+                        resp.headers[HEADER_WWW_AUTHENTICATE] = 'Cookie realm="Login Required"'
                         resp._content = b'401 Unauthorized'
                         resp._has_dynamic_content = True
 
@@ -214,13 +214,9 @@ class HttpAdapter:
         :param req:(Request) The :class:`Request <Request>` object.
         :rtype: cookies - A dictionary of cookie key-value pairs.
         """
-        cookie_header = req.headers.get('Cookie')
-        if not cookie_header:
-            return {}
-        return parse_cookie_header(cookie_header)
+        # Request.prepare already parses Cookie header into req.cookies.
+        return getattr(req, 'cookies', {}) or {}
     
-
-
     def build_response(self, req, resp):
         """
         Builds a :class:`Response <Response>` object 

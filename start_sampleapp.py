@@ -38,6 +38,7 @@ from daemon.weaprous import WeApRous
 from daemon.tracker import get_tracker
 from daemon.p2p_daemon import P2PDaemon
 from daemon.cookies import make_set_cookie, Cookie
+from daemon.http_consts import HEADER_CONTENT_TYPE, HEADER_LOCATION, HEADER_WWW_AUTHENTICATE
 
 PORT = 9001  # Default port
 P2P_PORT_BASE = 9100  # Base port for P2P connections
@@ -105,12 +106,12 @@ def handle_login(headers, body, username=None):
         return {
             'status': 302,
             'headers' : {
-                'Location': '/',
-                'Content-Type': 'text/html; charset=utf-8'
+                HEADER_LOCATION: '/',
+                HEADER_CONTENT_TYPE: 'text/html; charset=utf-8'
             },
             'cookies': {
-                'auth': Cookie('auth', auth_token, 3600, '/', True, False),
-                'username': Cookie('username', username, 3600, '/', False, False)
+                'auth': Cookie('auth', auth_token, '/', 3600, True, False),
+                'username': Cookie('username', username, '/', 3600, False, False)
             },
             'body': '<html><body>Redirecting...</body></html>'
         }
@@ -122,8 +123,8 @@ def handle_login(headers, body, username=None):
         return {
             'status': 401,
             'headers': {
-                'Content-Type': 'text/html; charset=utf-8',
-                'WWW-Authenticate': 'Form realm="Login Required"'
+                HEADER_CONTENT_TYPE: 'text/html; charset=utf-8',
+                HEADER_WWW_AUTHENTICATE: 'Form realm="Login Required"'
             },
             'body': error_html
         }
@@ -158,8 +159,8 @@ def handle_logout(headers, body, username=None):
     return {
         'status': 302,
         'headers': {
-            'Location': '/login.html',
-            'Content-Type': 'text/html; charset=utf-8'
+            HEADER_LOCATION: '/login.html',
+            HEADER_CONTENT_TYPE: 'text/html; charset=utf-8'
         },
         'cookies': {
             'auth': 'deleted; Max-Age=0',
@@ -275,7 +276,7 @@ def submit_peer_info(headers, body, username=None):
         
         return {
             'status': 200,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {HEADER_CONTENT_TYPE: 'application/json'},
             'body': json.dumps({
                 'status': 'success',
                 'peer_id': peer_dict['peer_id'],
@@ -307,7 +308,7 @@ def get_peer_list(headers, body, username=None):
         
         return {
             'status': 200,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {HEADER_CONTENT_TYPE: 'application/json'},
             'body': json.dumps({
                 'peers': peer_list,
                 'server_time': int(time.time() * 1000)
@@ -359,7 +360,7 @@ def connect_peer(headers, body, username=None):
         
         return {
             'status': 200,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {HEADER_CONTENT_TYPE: 'application/json'},
             'body': json.dumps({
                 'to_peer_addr': peer_addr,
                 'nonce': nonce
@@ -393,7 +394,7 @@ def broadcast_peer_events(headers, body, username=None):
         
         return {
             'status': 200,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {HEADER_CONTENT_TYPE: 'application/json'},
             'body': json.dumps({'events': events})
         }
     except Exception as e:
@@ -431,7 +432,7 @@ def heartbeat(headers, body, username=None):
         
         return {
             'status': 200,
-            'headers': {'Content-Type': 'application/json'},
+            'headers': {HEADER_CONTENT_TYPE: 'application/json'},
             'body': json.dumps({
                 'expired_peers': expired,
                 'server_time': int(time.time() * 1000)
@@ -524,9 +525,9 @@ def p2p_get_requests(headers, body, username=None):
             
             return {
                 'status': 200,
-                'headers': {'Content-Type': 'application/json'},
+                'headers': {HEADER_CONTENT_TYPE: 'application/json'},
                 'body': json.dumps({'requests': valid_requests})
-            }
+                }
     
     except Exception as e:
         print(f"[SampleApp] p2p-get-requests error: {e}")
@@ -639,7 +640,7 @@ def p2p_get_responses(headers, body, username=None):
             
             return {
                 'status': 200,
-                'headers': {'Content-Type': 'application/json'},
+                'headers': {HEADER_CONTENT_TYPE: 'application/json'},
                 'body': json.dumps({'responses': valid_responses})
             }
     
@@ -749,7 +750,7 @@ def p2p_connect(headers, body, username=None):
             print(f"[SampleApp] '{username}' connected to '{to_peer}'")
             return {
                 'status': 200,
-                'headers': {'Content-Type': 'application/json'},
+                'headers': {HEADER_CONTENT_TYPE: 'application/json'},
                 'body': json.dumps({
                     'status': 'connected',
                     'peer': to_peer,
@@ -758,18 +759,18 @@ def p2p_connect(headers, body, username=None):
             }
         else:
             return {
-                'status': 500,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'error': 'Failed to connect to peer'})
-            }
+            'status': 200,
+            'headers': {HEADER_CONTENT_TYPE: 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
     
     except Exception as e:
         print(f"[SampleApp] p2p-connect error: {e}")
         import traceback
         traceback.print_exc()
         return {
-            'status': 500,
-            'headers': {'Content-Type': 'application/json'},
+            'status': 200,
+            'headers': {HEADER_CONTENT_TYPE: 'application/json'},
             'body': json.dumps({'error': str(e)})
         }
 
@@ -812,7 +813,7 @@ def p2p_send(headers, body, username=None):
             print(f"[SampleApp] '{username}' sent {msg_type} to '{to_peer}'")
             return {
                 'status': 200,
-                'headers': {'Content-Type': 'application/json'},
+                'headers': {HEADER_CONTENT_TYPE: 'application/json'},
                 'body': json.dumps({
                     'status': 'sent',
                     'timestamp': int(time.time() * 1000)

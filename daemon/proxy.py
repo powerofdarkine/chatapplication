@@ -38,6 +38,7 @@ from daemon.response import Response
 
 from .httpadapter import HttpAdapter
 from .dictionary import CaseInsensitiveDict
+from .http_consts import CRLF, CRLF2
 
 # ----------------------------
 # Round-robin state (thread-safe)
@@ -187,7 +188,7 @@ def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -
 
         # Split headers/body
         try:
-            header_part, body_part = request.split("\r\n\r\n", 1)
+            header_part, body_part = request.split(CRLF2, 1)
         except ValueError:
             header_part, body_part = request, ""
 
@@ -234,7 +235,7 @@ def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -
             else:
                 modified_header_lines.append(line)
 
-        modified_request = "\r\n".join(modified_header_lines) + "\r\n\r\n" + body_part
+        modified_request = CRLF.join(modified_header_lines) + CRLF2 + body_part
 
         # Forward and return response to client
         backend_response = forward_request(resolved_host, resolved_port, modified_request)

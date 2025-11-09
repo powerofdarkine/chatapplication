@@ -23,8 +23,8 @@ from __future__ import annotations
 from typing import Dict, Iterable, Optional, Tuple
 
 from .dictionary import CaseInsensitiveDict
-
 from .cookies import parse_cookie_header
+from .http_consts import CRLF, CRLF2, NLINE2
 
 
 class Request:
@@ -99,7 +99,7 @@ class Request:
         """
         try:
             # Ensure we only consider a single line
-            first_line = first_line.strip("\r\n")
+            first_line = first_line.strip(CRLF)
             parts = first_line.split()
             if len(parts) != 3:
                 raise ValueError("Malformed request line")
@@ -126,7 +126,7 @@ class Request:
         """
         headers = CaseInsensitiveDict()
         for raw in header_lines_list:
-            line = raw.strip("\r\n")
+            line = raw.strip(CRLF)
             if not line:
                 continue
             # Only split on the first ":" to support values containing ":".
@@ -219,14 +219,13 @@ class Request:
         Outputs:
             - (header_block, body) where body may be "" if none present.
         """
-        # Prefer CRLF separator, fall back to LF-only if needed.
-        sep = "\r\n\r\n"
-        if sep in raw:
-            parts = raw.split(sep, 1)
+        # Prefer CRLFCRLF separator, fall back to LF-only if needed.
+        if CRLF2 in raw:
+            parts = raw.split(CRLF2, 1)
             return parts[0], parts[1]
-        sep_lf = "\n\n"
-        if sep_lf in raw:
-            parts = raw.split(sep_lf, 1)
+        # Fallback to LF-only double newline
+        if NLINE2 in raw:
+            parts = raw.split(NLINE2, 1)
             return parts[0], parts[1]
         # No body present
         return raw, ""

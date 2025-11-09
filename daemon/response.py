@@ -24,10 +24,22 @@ The current version supports MIME type detection, content loading and header for
 import datetime
 import mimetypes
 import os
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 
 from .dictionary import CaseInsensitiveDict
 from .cookies import make_set_cookie, Cookie
+from .http_consts import (
+    CRLF,
+    CRLF2,
+    HTTP_1_1,
+    HEADER_SET_COOKIE,
+    HEADER_CONTENT_LENGTH,
+    HEADER_CONNECTION,
+    CONNECTION_CLOSE,
+    HEADER_CONTENT_TYPE,
+    HEADER_LOCATION,
+    DATE_FORMAT,
+)
 
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -79,8 +91,9 @@ class Response:
         self.status_code: Optional[int] = None
         self.reason: Optional[str] = None
         self.headers = CaseInsensitiveDict()
-        self.cookies: CaseInsensitiveDict = CaseInsensitiveDict()
-        
+        # Response.cookies maps cookie name -> Cookie dataclass instance
+        self.cookies: Dict[str, Cookie] = {}
+
         self._content: Union[bytes, bool] = False
         self._has_dynamic_content = False
 
@@ -111,17 +124,19 @@ class Response:
         for k, v in (hook_data.get("headers") or {}).items():
             self.headers[k] = v
 
-        for name, val in (hook_data.get("Cookies") or {}).items():
+        # Accept both 'cookies' and legacy 'Cookies' keys
+        for name, val in (hook_data.get("cookies") or hook_data.get("Cookies") or {}).items():
             if isinstance(val, Cookie):
                 self.cookies[name] = val
             elif isinstance(val, dict):
                 self.cookies[name] = Cookie(
                     name,
-                    val.get('value',''),
+                    val.get('value', ''),
                     val.get('path', '/'),
-                    val.get('max_age'), 
+                    val.get('max_age'),
                     val.get('httponly', True),
-                    val.get('secure', False))
+                    val.get('secure', False),
+                )
             else:
                 self.cookies[name] = Cookie(name, str(val))
         
@@ -147,7 +162,7 @@ class Response:
         self.status_code = code
         self.reason = reason
         self._content = f"{code} {reason}".encode("utf-8")
-        self.headers["Content-Type"] = "text/plain; charset=utf-8"
+        self.headers[HEADER_CONTENT_TYPE] = "text/plain; charset=utf-8"
 
     # ----------------------------
     # Static content helpers
@@ -193,7 +208,7 @@ class Response:
         # Minimal debug log for lab observability
         print(f"[Response] MIME negotiated main_type={main_type} sub_type={sub_type}")
 
-        self.headers["Content-Type"] = mime_type
+        self.headers[HEADER_CONTENT_TYPE] = mime_type
 
         if main_type == "text":
             if sub_type == "html":
@@ -271,22 +286,38 @@ class Response:
         status = self.status_code or 200
         reason = self.reason or _reason_phrase_for(status)
         body_bytes = self._content or b""
-        if "Content-Length" not in self.headers:
-            self.headers["Content-Length"] = str(len(body_bytes))
-        if "Connection" not in self.headers:
-            self.headers["Connection"] = "close"
-        
-        header_lines = [f"HTTP/1.1 {status} {reason}"]
-        
+
+        # Ensure essential headers
+        if HEADER_CONTENT_LENGTH not in self.headers:
+            self.headers[HEADER_CONTENT_LENGTH] = str(len(body_bytes))
+        if HEADER_CONNECTION not in self.headers:
+            self.headers[HEADER_CONNECTION] = CONNECTION_CLOSE
+
+        header_lines = [f"{HTTP_1_1} {status} {reason}"]
+
         for k, v in self.headers.items():
             header_lines.append(f"{k}: {v}")
         for name, cookie_obj in self.cookies.items():
             if isinstance(cookie_obj, Cookie):
-                header_lines.append(f"Set-Cookie: {cookie_obj.render_set_cookie()}")
+                rendered = cookie_obj.render_set_cookie()
+            elif isinstance(cookie_obj, dict):
+                # Coerce dict to Cookie dataclass with logging
+                print(f"[Response] Coercing cookie dict for '{name}' to Cookie")
+                cookie_obj = Cookie(
+                    name,
+                    cookie_obj.get("value", ""),
+                    cookie_obj.get("path", "/"),
+                    cookie_obj.get("max_age"),
+                    cookie_obj.get("httponly", True),
+                    cookie_obj.get("secure", False),
+                )
+                rendered = cookie_obj.render_set_cookie()
             else:
                 rendered = make_set_cookie(name, str(cookie_obj))
-                header_lines.append(f"Set-Cookie: {rendered}")
-        header_block = "\r\n".join(header_lines) + "\r\n\r\n"
+
+            header_lines.append(f"{HEADER_SET_COOKIE}: {rendered}")
+
+        header_block = CRLF.join(header_lines) + CRLF2
         return header_block.encode("utf-8") + (body_bytes or b"")
 
     @classmethod
@@ -294,7 +325,7 @@ class Response:
         r = cls()
         r.status_code = status
         r.reason = reason
-        r.headers["Content-Type"] = content_type
+        r.headers[HEADER_CONTENT_TYPE] = content_type
         r._content = body_text.encode("utf-8")
         return r
 
@@ -313,7 +344,7 @@ class Response:
     @classmethod
     def redirect(cls, location: str, body_text: str = "<html><body>Redirect</body></html>"):
         r = cls.simple(302, "Found", body_text, content_type="text/html; charset=utf-8")
-        r.headers["Location"] = location
+        r.headers[HEADER_LOCATION] = location
         return r
 
     def build_response_header(self, request=None) -> bytes:
@@ -322,41 +353,21 @@ class Response:
         Outputs:
             - header bytes suitable to be written to a socket.
         """
-        if not self.status_code:
-            self.status_code = 200
-            self.reason = "OK"
-
-        status_line = f"HTTP/1.1 {self.status_code} {self.reason}\r\n"
-        header_lines = [status_line]
-
-        for cookie_name, cookie_value in self.cookies.items():
-            if cookie_value is None:
-                continue
-            if cookie_value.startswith(f"{cookie_name}=") or ("=" in cookie_value and cookie_value.split("=",1)[0] == cookie_name):
-                header_lines.append(f"Set-Cookie: {cookie_value}\r\n")
-            else:
-                # render using centralized formatter
-                rendered = make_set_cookie(cookie_name, cookie_value)
-                header_lines.append(f"Set-Cookie: {rendered}\r\n")
-
-        content_length = len(self._content) if isinstance(self._content, (bytes, bytearray)) else 0
-        header_lines.append(f"Content-Length: {content_length}\r\n")
-        header_lines.append(
-            f"Date: {datetime.datetime.utcnow().strftime('%a, %d %b %Y %H:%M:%S GMT')}\r\n"
-        )
-        header_lines.append("Connection: close\r\n")
-        header_lines.append("\r\n")
-
-        return "".join(header_lines).encode("utf-8")
+        # Delegate to build_response_bytes and return header portion only.
+        full = self.build_response_bytes()
+        marker = CRLF2.encode("utf-8")
+        idx = full.find(marker)
+        if idx == -1:
+            return full
+        return full[: idx + len(marker)]
 
     def build_notfound(self) -> bytes:
         """Return a minimal 404 response (header + body)."""
         self.status_code = 404
         self.reason = "Not Found"
-        self.headers["Content-Type"] = "text/html; charset=utf-8"
+        self.headers[HEADER_CONTENT_TYPE] = "text/html; charset=utf-8"
         self._content = b"<html><body><h1>404 Not Found</h1></body></html>"
-        header = self.build_response_header(None)
-        return header + (self._content or b"")
+        return self.build_response_bytes()
 
     def build_static_filepath(self, request_path: str) -> str:
         """Map a static request path into the static directory.
@@ -405,15 +416,14 @@ class Response:
                 _, content = self.build_content(request.path, base_dir)
                 self._content = content
 
-                if "Content-Type" not in self.headers:
-                    self.headers["Content-Type"] = mime_type
+                if HEADER_CONTENT_TYPE not in self.headers:
+                    self.headers[HEADER_CONTENT_TYPE] = mime_type
 
                 if not self.status_code:
                     self.status_code = 200
                     self.reason = "OK"
 
-                header = self.build_response_header(request)
-                return header + (self._content or b"")
+                return self.build_response_bytes()
 
             except (FileNotFoundError, IsADirectoryError):
                 return self.build_notfound()
@@ -423,8 +433,7 @@ class Response:
 
                 traceback.print_exc()
                 self.set_error(500, "Internal Server Error")
-                header = self.build_response_header(request)
-                return header + (self._content or b"")
+                return self.build_response_bytes()
 
         # 4) Fallback: empty 200
         if not self._content:
@@ -433,8 +442,7 @@ class Response:
             self.status_code = 200
             self.reason = "OK"
 
-        header = self.build_response_header(request)
-        return header + (self._content or b"")
+        return self.build_response_bytes()
 
     # ----------------------------
     # Cookies
