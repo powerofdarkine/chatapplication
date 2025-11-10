@@ -175,18 +175,12 @@ class Request:
 
     def prepare_body(self, data, files, json=None):
         """Compatibility placeholder kept for API parity with client parsers.
-
-        The server-side code does not implement the richer request body
-        construction used by client libraries; this function exists only for
-        compatibility and intentionally performs no work.
         """
         return
 
     def prepare_content_length(self, body):
         """Compatibility placeholder: content-length is handled elsewhere.
 
-        The response builder is responsible for computing and setting the
-        Content-Length header; this method is a no-op kept for compatibility.
         """
         return
 

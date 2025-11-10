@@ -967,6 +967,211 @@ def p2p_status(headers, body, username=None):
             'body': json.dumps({'error': str(e)})
         }
 
+# Broadcast room endpoints
+
+@app.route('/api/broadcast/join', methods=['POST'])
+def broadcast_join(headers, body, username=None):
+    """
+    Join the broadcast room.
+    POST /api/broadcast/join
+    Returns: {status, members, member_count}
+    """
+    try:
+        result = tracker.join_broadcast_room(username)
+        
+        if 'error' in result:
+            return {
+                'status': 400,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps(result)
+            }
+        
+        print(f"[SampleApp] {username} joined broadcast room")
+        
+        return {
+            'status': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(result)
+        }
+    
+    except Exception as e:
+        print(f"[SampleApp] broadcast/join error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'status': 500,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
+
+@app.route('/api/broadcast/leave', methods=['POST'])
+def broadcast_leave(headers, body, username=None):
+    """
+    Leave the broadcast room.
+    POST /api/broadcast/leave
+    Returns: {status, members, member_count}
+    """
+    try:
+        result = tracker.leave_broadcast_room(username)
+        
+        if 'error' in result:
+            return {
+                'status': 400,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps(result)
+            }
+        
+        print(f"[SampleApp] {username} left broadcast room")
+        
+        return {
+            'status': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(result)
+        }
+    
+    except Exception as e:
+        print(f"[SampleApp] broadcast/leave error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'status': 500,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
+
+@app.route('/api/broadcast/send', methods=['POST'])
+def broadcast_send(headers, body, username=None):
+    """
+    Send a message to the broadcast room.
+    POST /api/broadcast/send with JSON: {message}
+    Returns: {status, recipients, recipient_count}
+    """
+    try:
+        data = json.loads(body) if body else {}
+        message = data.get('message', '').strip()
+        
+        if not message:
+            return {
+                'status': 400,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps({'error': 'message required'})
+            }
+        
+        result = tracker.send_broadcast_message(username, message)
+        
+        if 'error' in result:
+            return {
+                'status': 400,
+                'headers': {'Content-Type': 'application/json'},
+                'body': json.dumps(result)
+            }
+        
+        print(f"[SampleApp] {username} sent broadcast message to {result['recipient_count']} peers")
+        
+        return {
+            'status': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps(result)
+        }
+    
+    except Exception as e:
+        print(f"[SampleApp] broadcast/send error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'status': 500,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
+
+@app.route('/api/broadcast/messages', methods=['POST'])
+def broadcast_messages(headers, body, username=None):
+    """
+    Get broadcast room messages (only messages sent after user joined).
+    POST /api/broadcast/messages with JSON: {since}
+    Returns: {messages: [...], server_time}
+    """
+    try:
+        data = json.loads(body) if body else {}
+        since_ts = data.get('since', 0)
+        
+        messages = tracker.get_broadcast_messages(username, since_ts)
+        
+        return {
+            'status': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({
+                'messages': messages,
+                'server_time': int(time.time() * 1000)
+            })
+        }
+    
+    except Exception as e:
+        print(f"[SampleApp] broadcast/messages error: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'status': 500,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
+
+@app.route('/api/broadcast/members', methods=['GET'])
+def broadcast_members(headers, body, username=None):
+    """
+    Get list of broadcast room members.
+    GET /api/broadcast/members
+    Returns: {members: [...], member_count}
+    """
+    try:
+        members = tracker.get_broadcast_room_members()
+        
+        return {
+            'status': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({
+                'members': members,
+                'member_count': len(members)
+            })
+        }
+    
+    except Exception as e:
+        print(f"[SampleApp] broadcast/members error: {e}")
+        return {
+            'status': 500,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
+
+@app.route('/api/broadcast/status', methods=['GET'])
+def broadcast_status(headers, body, username=None):
+    """
+    Check if user is in broadcast room.
+    GET /api/broadcast/status
+    Returns: {in_room: bool, members: [...], member_count}
+    """
+    try:
+        in_room = tracker.is_in_broadcast_room(username)
+        members = tracker.get_broadcast_room_members() if in_room else []
+        
+        return {
+            'status': 200,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({
+                'in_room': in_room,
+                'members': members,
+                'member_count': len(members)
+            })
+        }
+    
+    except Exception as e:
+        print(f"[SampleApp] broadcast/status error: {e}")
+        return {
+            'status': 500,
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'error': str(e)})
+        }
+
 def load_html(filename):
     """
     Helper function to load HTML files.

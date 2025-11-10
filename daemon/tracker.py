@@ -90,6 +90,7 @@ class PeerTracker:
     HEARTBEAT_TIMEOUT_MS = 45000  # 45 seconds
     CLEANUP_INTERVAL_SEC = 5      # Check every 5 seconds
     EVENT_QUEUE_MAX = 100         # Max events per peer
+    BROADCAST_MESSAGE_MAX = 500   # Max broadcast messages per peer
     
     def __init__(self):
         self.peers = {}  # peer_id -> Peer
@@ -97,6 +98,12 @@ class PeerTracker:
         self.lock = threading.RLock()
         self.cleanup_thread = None
         self.running = False
+        
+        # Broadcast room functionality
+        self.broadcast_room_members = set()  # Set of peer_ids in broadcast room
+        self.broadcast_messages = deque(maxlen=self.BROADCAST_MESSAGE_MAX)  # Global broadcast message history
+        self.peer_join_timestamps = {}  # peer_id -> timestamp when joined broadcast room
+        
         print("[Tracker] Initialized")
     
     def start(self):
@@ -174,7 +181,7 @@ class PeerTracker:
 
         The peer is marked ``OFFLINE``, a ``peer-left`` event is appended to
         all other peers' event queues, and the peer is removed from the
-        active map.
+        active map. Also removes peer from broadcast room if they were in it.
 
         Args:
             peer_id (str): identifier of the peer to remove
@@ -187,6 +194,22 @@ class PeerTracker:
             if peer_id in self.peers:
                 peer = self.peers[peer_id]
                 peer.status = "OFFLINE"
+
+                # Remove from broadcast room if present
+                if peer_id in self.broadcast_room_members:
+                    self.broadcast_room_members.discard(peer_id)
+                    if peer_id in self.peer_join_timestamps:
+                        del self.peer_join_timestamps[peer_id]
+                    
+                    # Announce leave to broadcast room
+                    leave_message = {
+                        'type': 'SYSTEM',
+                        'from': 'SYSTEM',
+                        'body': f'{peer_id} left the broadcast room',
+                        'timestamp': int(time.time() * 1000),
+                        'msg_id': str(uuid.uuid4())
+                    }
+                    self.broadcast_messages.append(leave_message)
 
                 # Notify other peers
                 self._broadcast_event_locked('peer-left', peer)
@@ -246,7 +269,8 @@ class PeerTracker:
         A peer is considered expired when its ``last_seen`` timestamp is
         older than the configured ``HEARTBEAT_TIMEOUT_MS``. Expired peers
         are marked ``OFFLINE``, removed from the active map and a
-        ``peer-left`` event is broadcast to remaining peers.
+        ``peer-left`` event is broadcast to remaining peers. Also removes
+        from broadcast room.
 
         Returns:
             list[str]: list of peer_ids that were expired and removed.
@@ -261,6 +285,23 @@ class PeerTracker:
                     # Mark offline
                     peer.status = "OFFLINE"
                     expired.append(peer_id)
+                    
+                    # Remove from broadcast room if present
+                    if peer_id in self.broadcast_room_members:
+                        self.broadcast_room_members.discard(peer_id)
+                        if peer_id in self.peer_join_timestamps:
+                            del self.peer_join_timestamps[peer_id]
+                        
+                        # Announce leave to broadcast room
+                        leave_message = {
+                            'type': 'SYSTEM',
+                            'from': 'SYSTEM',
+                            'body': f'{peer_id} left the broadcast room (timeout)',
+                            'timestamp': int(time.time() * 1000),
+                            'msg_id': str(uuid.uuid4())
+                        }
+                        self.broadcast_messages.append(leave_message)
+                    
                     # Notify others
                     self._broadcast_event_locked('peer-left', peer)
 
@@ -348,6 +389,164 @@ class PeerTracker:
             str: an 8-character string derived from a UUID4.
         """
         return str(uuid.uuid4())[:8]
+    
+    # Broadcast room methods
+    
+    def join_broadcast_room(self, peer_id):
+        """Add a peer to the broadcast room.
+        
+        Args:
+            peer_id (str): identifier of the peer joining the room
+            
+        Returns:
+            dict: status and current members list
+        """
+        with self.lock:
+            if peer_id not in self.peers:
+                return {'error': 'Peer not registered'}
+            
+            if peer_id in self.broadcast_room_members:
+                return {'error': 'Already in broadcast room'}
+            
+            # Add to room
+            self.broadcast_room_members.add(peer_id)
+            self.peer_join_timestamps[peer_id] = int(time.time() * 1000)
+            
+            # Broadcast join announcement to all members
+            join_message = {
+                'type': 'SYSTEM',
+                'from': 'SYSTEM',
+                'body': f'{peer_id} joined the broadcast room',
+                'timestamp': int(time.time() * 1000),
+                'msg_id': str(uuid.uuid4())
+            }
+            self.broadcast_messages.append(join_message)
+            
+            print(f"[Tracker] {peer_id} joined broadcast room")
+            
+            return {
+                'status': 'success',
+                'members': list(self.broadcast_room_members),
+                'member_count': len(self.broadcast_room_members)
+            }
+    
+    def leave_broadcast_room(self, peer_id):
+        """Remove a peer from the broadcast room.
+        
+        Args:
+            peer_id (str): identifier of the peer leaving the room
+            
+        Returns:
+            dict: status message
+        """
+        with self.lock:
+            if peer_id not in self.broadcast_room_members:
+                return {'error': 'Not in broadcast room'}
+            
+            # Remove from room
+            self.broadcast_room_members.discard(peer_id)
+            if peer_id in self.peer_join_timestamps:
+                del self.peer_join_timestamps[peer_id]
+            
+            # Broadcast leave announcement to remaining members
+            leave_message = {
+                'type': 'SYSTEM',
+                'from': 'SYSTEM',
+                'body': f'{peer_id} left the broadcast room',
+                'timestamp': int(time.time() * 1000),
+                'msg_id': str(uuid.uuid4())
+            }
+            self.broadcast_messages.append(leave_message)
+            
+            print(f"[Tracker] {peer_id} left broadcast room")
+            
+            return {
+                'status': 'success',
+                'members': list(self.broadcast_room_members),
+                'member_count': len(self.broadcast_room_members)
+            }
+    
+    def send_broadcast_message(self, peer_id, message):
+        """Send a message to all peers in the broadcast room.
+        
+        Args:
+            peer_id (str): identifier of the sender
+            message (str): message content
+            
+        Returns:
+            dict: status and delivery info
+        """
+        with self.lock:
+            if peer_id not in self.broadcast_room_members:
+                return {'error': 'Not in broadcast room'}
+            
+            # Create broadcast message
+            broadcast_msg = {
+                'type': 'CHAT',
+                'from': peer_id,
+                'body': message,
+                'timestamp': int(time.time() * 1000),
+                'msg_id': str(uuid.uuid4())
+            }
+            
+            # Add to message history
+            self.broadcast_messages.append(broadcast_msg)
+            
+            print(f"[Tracker] Broadcast message from {peer_id} to {len(self.broadcast_room_members)} members")
+            
+            return {
+                'status': 'success',
+                'recipients': list(self.broadcast_room_members),
+                'recipient_count': len(self.broadcast_room_members)
+            }
+    
+    def get_broadcast_messages(self, peer_id, since_ts=0):
+        """Get broadcast messages sent after peer joined the room.
+        
+        Args:
+            peer_id (str): identifier of the requesting peer
+            since_ts (int): timestamp to filter messages (exclusive)
+            
+        Returns:
+            list: messages sent after the peer joined and after since_ts
+        """
+        with self.lock:
+            if peer_id not in self.broadcast_room_members:
+                return []
+            
+            # Get the timestamp when this peer joined
+            join_ts = self.peer_join_timestamps.get(peer_id, 0)
+            
+            # Filter messages: must be after join time AND after since_ts
+            filter_ts = max(join_ts, since_ts)
+            
+            messages = [
+                msg for msg in self.broadcast_messages 
+                if msg['timestamp'] > filter_ts
+            ]
+            
+            return messages
+    
+    def get_broadcast_room_members(self):
+        """Get list of current broadcast room members.
+        
+        Returns:
+            list: peer_ids of all members in the room
+        """
+        with self.lock:
+            return list(self.broadcast_room_members)
+    
+    def is_in_broadcast_room(self, peer_id):
+        """Check if a peer is in the broadcast room.
+        
+        Args:
+            peer_id (str): identifier of the peer
+            
+        Returns:
+            bool: True if peer is in the room
+        """
+        with self.lock:
+            return peer_id in self.broadcast_room_members
 
 
 # Global singleton tracker

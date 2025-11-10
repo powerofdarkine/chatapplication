@@ -4,8 +4,11 @@ let peers = [];
 let connectedPeers = new Set();  // Set of peer IDs we're connected to
 let lastEventTimestamp = 0;
 let lastMessageTimestamp = 0;
+let lastBroadcastTimestamp = 0;  // For broadcast room messages
 let p2pRegistered = false;
 let pendingConnectionRequest = null; // {from: peerId} when showing request modal
+let inBroadcastRoom = false;  // Track if user is in broadcast room
+let broadcastRoomMembers = [];  // List of members in broadcast room
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
@@ -21,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(pollConnectionResponses, 2000);    // Poll connection responses every 2s
     setInterval(sendHeartbeat, 15000);             // Send heartbeat every 15s
     setInterval(updateP2PStatus, 5000);            // Update P2P status every 5s
+    setInterval(pollBroadcastMessages, 2000);      // Poll broadcast messages every 2s
 });
 
 // Load current user info
@@ -103,12 +107,26 @@ async function loadPeers() {
 function renderPeerList() {
     const peerList = document.getElementById('peerList');
     
+    // Add Broadcast Room option at the top
+    let broadcastOption = `
+        <li class="peer-item ${activePeer === 'BROADCAST' ? 'active' : ''}" onclick="selectBroadcastRoom()" style="border-bottom: 2px solid #eee; margin-bottom: 10px;">
+            <div class="peer-avatar" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">📢</div>
+            <div class="peer-info">
+                <div class="peer-name">
+                    Broadcast Room
+                    ${inBroadcastRoom ? '<span class="badge" style="background: #28a745;">Joined</span>' : ''}
+                </div>
+                <div class="peer-status" style="color: #667eea;">${broadcastRoomMembers.length} members</div>
+            </div>
+        </li>
+    `;
+    
     if (peers.length === 0) {
-        peerList.innerHTML = '<li class="peer-loading">No peers online</li>';
+        peerList.innerHTML = broadcastOption + '<li class="peer-loading">No peers online</li>';
         return;
     }
     
-    peerList.innerHTML = peers.map(peer => {
+    peerList.innerHTML = broadcastOption + peers.map(peer => {
         const isConnected = connectedPeers.has(peer.peer_id);
         const isActive = activePeer === peer.peer_id;
         const statusClass = peer.status === 'ONLINE' ? '' : 'offline';
@@ -170,6 +188,51 @@ async function selectPeer(peerId) {
         sendBtn.disabled = false;
         inputEl.placeholder = 'Type your message...';
     }
+}
+
+// Select broadcast room
+async function selectBroadcastRoom() {
+    activePeer = 'BROADCAST';
+    
+    // Show chat window
+    document.getElementById('chatWelcome').style.display = 'none';
+    document.getElementById('chatActive').style.display = 'flex';
+    document.getElementById('activePeer').textContent = 'Broadcast Room';
+    
+    // Clear messages
+    document.getElementById('messagesContainer').innerHTML = '';
+    
+    // Update connection status
+    const statusEl = document.getElementById('connectionStatus');
+    statusEl.textContent = `(${broadcastRoomMembers.length} members)`;
+    statusEl.style.color = '#667eea';
+    
+    // Update "End Session" button to "Leave Room" / "Join Room"
+    const endBtn = document.getElementById('endSessionBtn');
+    if (endBtn) {
+        if (inBroadcastRoom) {
+            endBtn.textContent = 'Leave Room';
+            endBtn.onclick = leaveBroadcastRoom;
+            
+            // Enable input
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('messageInput').placeholder = 'Broadcast to all members...';
+        } else {
+            endBtn.textContent = 'Join Room';
+            endBtn.onclick = joinBroadcastRoom;
+            
+            // Disable input until joined
+            document.getElementById('messageInput').disabled = true;
+            document.getElementById('sendBtn').disabled = true;
+            document.getElementById('messageInput').placeholder = 'Click "Join Room" to participate...';
+            
+            appendSystemMessage('Click "Join Room" to join the broadcast room and see messages');
+        }
+    }
+    
+    // Re-render peer list
+    renderPeerList();
 }
 
 // Request connection to a peer (NEW)
@@ -301,7 +364,42 @@ async function sendMessage() {
     
     if (!message || !activePeer) return;
     
-    // Check if connected
+    // Handle broadcast room
+    if (activePeer === 'BROADCAST') {
+        if (!inBroadcastRoom) {
+            appendSystemMessage('Please join the broadcast room first');
+            return;
+        }
+        
+        try {
+            const response = await fetch('/api/broadcast/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    message: message
+                })
+            });
+            
+            if (response.ok) {
+                // Add message to UI
+                appendMessage(message, 'sent', currentUser);
+                input.value = '';
+            } else {
+                const error = await response.json();
+                console.error('[Chat] Failed to send broadcast:', error);
+                appendSystemMessage(`Failed to send: ${error.error || 'Unknown error'}`);
+            }
+        } catch (error) {
+            console.error('[Chat] Error sending broadcast:', error);
+            appendSystemMessage('Error sending broadcast message');
+        }
+        
+        return;
+    }
+    
+    // Check if connected for P2P
     if (!connectedPeers.has(activePeer)) {
         appendSystemMessage('Not connected to peer. Click their name to connect.');
         return;
@@ -1023,5 +1121,170 @@ function refreshPeers() {
 function logout() {
     if (confirm('Are you sure you want to logout?')) {
         window.location.href = '/logout';
+    }
+}
+
+// Broadcast room functions
+
+async function joinBroadcastRoom() {
+    try {
+        console.log('[Chat] Joining broadcast room...');
+        
+        const response = await fetch('/api/broadcast/join', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            inBroadcastRoom = true;
+            broadcastRoomMembers = data.members || [];
+            
+            console.log('[Chat] Joined broadcast room:', data);
+            
+            // Update UI
+            appendSystemMessage(`You joined the broadcast room (${data.member_count} members)`, false);
+            
+            // Update button
+            const endBtn = document.getElementById('endSessionBtn');
+            if (endBtn) {
+                endBtn.textContent = 'Leave Room';
+                endBtn.onclick = leaveBroadcastRoom;
+            }
+            
+            // Enable input
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('messageInput').placeholder = 'Broadcast to all members...';
+            
+            // Update status
+            const statusEl = document.getElementById('connectionStatus');
+            statusEl.textContent = `(${data.member_count} members)`;
+            statusEl.style.color = '#28a745';
+            
+            // Re-render peer list
+            renderPeerList();
+            
+        } else {
+            const error = await response.json();
+            console.error('[Chat] Failed to join broadcast room:', error);
+            appendSystemMessage(`Failed to join: ${error.error || 'Unknown error'}`);
+        }
+        
+    } catch (error) {
+        console.error('[Chat] Error joining broadcast room:', error);
+        appendSystemMessage('Error joining broadcast room');
+    }
+}
+
+async function leaveBroadcastRoom() {
+    if (!confirm('Leave the broadcast room?')) return;
+    
+    try {
+        console.log('[Chat] Leaving broadcast room...');
+        
+        const response = await fetch('/api/broadcast/leave', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            inBroadcastRoom = false;
+            broadcastRoomMembers = data.members || [];
+            
+            console.log('[Chat] Left broadcast room');
+            
+            // Close chat window
+            document.getElementById('chatActive').style.display = 'none';
+            document.getElementById('chatWelcome').style.display = 'flex';
+            activePeer = null;
+            
+            // Re-render peer list
+            renderPeerList();
+            
+        } else {
+            const error = await response.json();
+            console.error('[Chat] Failed to leave broadcast room:', error);
+            appendSystemMessage(`Failed to leave: ${error.error || 'Unknown error'}`);
+        }
+        
+    } catch (error) {
+        console.error('[Chat] Error leaving broadcast room:', error);
+        appendSystemMessage('Error leaving broadcast room');
+    }
+}
+
+async function pollBroadcastMessages() {
+    if (!inBroadcastRoom || activePeer !== 'BROADCAST') return;
+    
+    try {
+        const response = await fetch('/api/broadcast/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                since: lastBroadcastTimestamp
+            })
+        });
+        
+        if (response.ok) {
+            const data = await response.json();
+            const messages = data.messages || [];
+            
+            messages.forEach(msg => {
+                if (msg.type === 'SYSTEM') {
+                    // System message (join/leave announcements)
+                    appendSystemMessage(msg.body, false);
+                } else if (msg.type === 'CHAT') {
+                    // Chat message
+                    if (msg.from === currentUser) {
+                        // Don't show our own messages again (already shown when sent)
+                    } else {
+                        appendMessage(msg.body, 'received', msg.from);
+                        playNotificationSound();
+                    }
+                }
+                
+                lastBroadcastTimestamp = Math.max(lastBroadcastTimestamp, msg.timestamp);
+            });
+            
+            // Update member count if available
+            if (messages.length > 0) {
+                await updateBroadcastRoomStatus();
+            }
+        }
+        
+    } catch (error) {
+        console.error('[Chat] Error polling broadcast messages:', error);
+    }
+}
+
+async function updateBroadcastRoomStatus() {
+    try {
+        const response = await fetch('/api/broadcast/members');
+        
+        if (response.ok) {
+            const data = await response.json();
+            broadcastRoomMembers = data.members || [];
+            
+            // Update status display if we're in broadcast room
+            if (activePeer === 'BROADCAST') {
+                const statusEl = document.getElementById('connectionStatus');
+                statusEl.textContent = `(${data.member_count} members)`;
+                statusEl.style.color = inBroadcastRoom ? '#28a745' : '#667eea';
+            }
+            
+            // Re-render peer list
+            renderPeerList();
+        }
+        
+    } catch (error) {
+        console.error('[Chat] Error updating broadcast room status:', error);
     }
 }
