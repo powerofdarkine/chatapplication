@@ -47,8 +47,8 @@ It supports the custom \texttt{CONNECT}/\texttt{ACCEPT} handshake and enforces t
 It defines all REST API endpoints for authentication, peer discovery, and P2P orchestration using the WeApRous framework. 
 This module acts as the intermediary between the browser-based frontend and the background P2P daemons. \\ 
 \hline
-\texttt{static/js/chat.js} & The client-side JavaScript component responsible for rendering the user interface, handling interactions, and maintaining communication with the backend. 
-It implements asynchronous long-polling mechanisms to receive real-time events and message updates from the server. \\ 
+	exttt{static/js/chat.js} & The client-side JavaScript component responsible for rendering the user interface, handling interactions, and maintaining communication with the backend. 
+It implements periodic polling (short-poll) mechanisms to receive near real-time events and message updates from the server. \\
 \hline
 \texttt{daemon/tracker.py} & A central state management module that maintains a thread-safe, in-memory registry of all connected peers. 
 It monitors peer status, coordinates connection updates, and enforces the 45-second heartbeat timeout for detecting inactive or disconnected clients. \\ 

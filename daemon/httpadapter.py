@@ -21,16 +21,25 @@ Request and Response objects to handle client-server communication.
 """
 
 import base64
+import socket
 from .request import Request
 from .response import Response
 from .dictionary import CaseInsensitiveDict
 from .http_consts import HEADER_CONTENT_TYPE, HEADER_LOCATION, HEADER_WWW_AUTHENTICATE
 
 class HttpAdapter:
-    """
-    A mutable :class:`HTTP adapter <HTTP adapter>` for managing client connections
-    and routing requests.
-    ...
+    """HTTP adapter that handles client connections and dispatches requests.
+
+    The adapter reads raw HTTP requests from a socket, parses them into
+    :class:`Request` objects, performs optional authentication, invokes
+    registered route hooks, and sends back a :class:`Response`.
+
+    Attributes:
+        ip (str): Server IP address.
+        port (int): Server port.
+        conn (socket.socket): Active client socket.
+        connaddr (tuple): Client address.
+        routes (dict): Route handlers mapping.
     """
 
     __attrs__ = [
@@ -43,15 +52,15 @@ class HttpAdapter:
         "response",
     ]
 
-    def __init__(self, ip, port, conn, connaddr, routes):
-        """
-        Initialize a new HttpAdapter instance.
+    def __init__(self, ip: str, port: int, conn: socket, connaddr: tuple, routes: dict):
+        """Initialize a new HttpAdapter.
 
-        :param ip (str): IP address of the client.
-        :param port (int): Port number of the client.
-        :param conn (socket): Active socket connection.
-        :param connaddr (tuple): Address of the connected client.
-        :param routes (dict): Mapping of route paths to handler functions.
+        Args:
+            ip (str): IP address of the server.
+            port (int): Port number of the server.
+            conn (socket.socket): Active socket connection.
+            connaddr (tuple): Address of the connected client.
+            routes (dict): Mapping of route paths to handler functions.
         """
 
         #: IP address.
@@ -70,6 +79,19 @@ class HttpAdapter:
         self.response = Response()
 
     def check_authentication(self, req):
+        """Validate authentication token found in request cookies.
+
+        The method expects an "auth" cookie containing either a legacy
+        boolean marker ("true") or a base64-encoded "username:password"
+        string. When an application-level `USERS` mapping is present in
+        `start_sampleapp`, credentials are validated against it.
+
+        Args:
+            req (Request): Parsed request object.
+
+        Returns:
+            tuple[bool, Optional[str]]: (is_authenticated, username_or_None)
+        """
         import base64
         cookies = self.extract_cookies(req)
         auth_cookie = cookies.get('auth')
@@ -104,17 +126,18 @@ class HttpAdapter:
             # Fallback: accept decoded token if no USERS available
             return (True, username)
 
-    def handle_client(self, conn, addr, routes):
-        """
-        Handle an incoming client connection.
+    def handle_client(self, conn: socket, addr:tuple, routes: dict):
+        """Process a single client connection.
 
-        This method reads the request from the socket, prepares the request object,
-        invokes the appropriate route handler if available, builds the response,
-        and sends it back to the client.
+        Reads raw bytes from ``conn``, decodes and parses them into a
+        :class:`Request`, optionally enforces authentication, executes the
+        matched route hook (if any), builds a :class:`Response`, and sends the
+        response bytes back to the client.
 
-        :param conn (socket): The client socket connection.
-        :param addr (tuple): The client's address.
-        :param routes (dict): The route mapping for dispatching requests.
+        Args:
+            conn (socket.socket): The client socket connection.
+            addr (tuple): The client's address (ip, port).
+            routes (dict): The route mapping for dispatching requests.
         """
 
         # Connection handler.
@@ -140,7 +163,6 @@ class HttpAdapter:
 
             PUBLIC_PATHS = ['/login', '/login.html', '/css/', '/js/', '/images/', '/favicon.ico']
 
-            # Handle request hook
             needs_auth = True
             for public_path in PUBLIC_PATHS:
                 if req.path.startswith(public_path):
@@ -207,19 +229,30 @@ class HttpAdapter:
         except Exception as e:
             print(f"[HttpAdapter] Error handling client {addr}: {e}")
 
-    def extract_cookies(self, req):
-        """
-        Build cookies from the :class:`Request <Request>` headers.
+    def extract_cookies(self, req: Request):
+        """Return parsed cookies from a Request.
 
-        :param req:(Request) The :class:`Request <Request>` object.
-        :rtype: cookies - A dictionary of cookie key-value pairs.
+        Args:
+            req (Request): Parsed request object.
+
+        Returns:
+            dict: Mapping of cookie name to value.
         """
-        # Request.prepare already parses Cookie header into req.cookies.
         return getattr(req, 'cookies', {}) or {}
     
-    def build_response(self, req, resp):
-        """
-        Builds a :class:`Response <Response>` object 
+    def build_response(self, req: Request, resp: Response):
+        """Build an adapter-level Response wrapper for a request/response pair.
+
+        The method composes an adapter-side response object that links the
+        originating request and the lower-level ``resp`` object produced by
+        application hooks.
+
+        Args:
+            req (Request): The incoming request.
+            resp (Response): The response produced by a handler.
+
+        Returns:
+            Response: A new Response instance wired to the adapter/context.
         """
         def get_encoding_from_headers(self, res):
             return
@@ -252,11 +285,6 @@ class HttpAdapter:
         ...
         """
         headers = {}
-        #
-        # TODO: build your authentication here
-        #       username, password =...
-        # we provide dummy auth here
-        #
         username, password = ("user1", "password")
 
         if username:

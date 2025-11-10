@@ -60,9 +60,9 @@ and real-time messaging without the use of prohibited frameworks or protocols su
 Each workflow behaved as expected across multiple user sessions.
 
 \paragraph{Latency and Response Time}
-The system’s perceived responsiveness is primarily determined by the frontend’s long-polling intervals. 
+The system’s perceived responsiveness is primarily determined by the frontend’s polling intervals. 
 As defined in \texttt{chat.js}, peer discovery events have a maximum latency of approximately 3~seconds, while chat message retrieval incurs a maximum delay of about 2~seconds. 
-Although not instantaneous, this performance is acceptable for the project’s scope and represents a significant improvement over conventional short-polling mechanisms.
+Although not instantaneous, this performance is acceptable for the project’s scope and represents a reasonable trade-off for a short-polling implementation.
 
 \paragraph{System Stability}
 The dual-layer health check strategy proved highly effective in maintaining operational stability. 
@@ -87,7 +87,7 @@ offering clear directions for enhancement in future iterations.
 \begin{itemize}
     \item \textbf{No NAT Traversal:} Direct TCP communication functions correctly on a local network but fails across public networks due to Network Address Translation (NAT) restrictions.
     \item \textbf{No Data Persistence:} All user data, session state, and message history are stored in memory and lost when the server restarts.
-    \item \textbf{Polling-Induced Latency:} The long-polling approach inherently introduces 2–3~second delays, limiting responsiveness compared to real-time protocols.
+    \item \textbf{Polling-Induced Latency:} Periodic polling at 2–3~second intervals introduces measurable delays, limiting responsiveness compared to real-time protocols.
 \end{itemize}
 
 \paragraph{Future Improvements}

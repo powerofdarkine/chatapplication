@@ -133,8 +133,7 @@ Content-Type: application/json
 Cookie: auth=<token>
 
 {
-  "display_name": "Alice",
-  "channels": ["general"]
+  "display_name": "Alice"
 }
 ```
 
@@ -166,8 +165,7 @@ Cookie: auth=<token>
       "ip": "127.0.0.1",
       "port": 9101,
       "status": "ONLINE",
-      "last_seen": 1730611200000,
-      "channels": ["general"]
+      "last_seen": 1730611200000
     }
   ],
   "server_time": 1730611200500

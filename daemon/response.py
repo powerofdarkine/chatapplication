@@ -91,15 +91,10 @@ class Response:
         self.status_code: Optional[int] = None
         self.reason: Optional[str] = None
         self.headers = CaseInsensitiveDict()
-        # Response.cookies maps cookie name -> Cookie dataclass instance
         self.cookies: Dict[str, Cookie] = {}
 
         self._content: Union[bytes, bool] = False
         self._has_dynamic_content = False
-
-    # ----------------------------
-    # Dynamic content (route hooks)
-    # ----------------------------
 
     def set_dynamic_content(self, hook_data: Optional[dict]) -> None:
         """Populate response from a route hook.
@@ -150,32 +145,22 @@ class Response:
             pass
 
     def set_error(self, code: int, reason: str) -> None:
-        """Set an error response.
+        """
+        Set an error response, (sets status, reason, content, and Content-Type header).
 
-        Inputs:
-            - code (int): HTTP status code (e.g., 500).
-            - reason (str): Reason phrase (e.g., "Internal Server Error").
-
-        Side-effects:
-            - Sets status, reason, content, and Content-Type header.
+        :param code: HTTP status code (e.g., 500).
+        :param reason: Reason phrase (e.g., "Internal Server Error").
         """
         self.status_code = code
         self.reason = reason
         self._content = f"{code} {reason}".encode("utf-8")
         self.headers[HEADER_CONTENT_TYPE] = "text/plain; charset=utf-8"
 
-    # ----------------------------
-    # Static content helpers
-    # ----------------------------
-
     def get_mime_type(self, path: str) -> str:
-        """Guess MIME type from path.
+        """
+        Guess MIME type from path. e.g., "text/css", default "application/octet-stream"
 
-        Inputs:
-            - path (str): request path (e.g., "/css/chat.css").
-
-        Outputs:
-            - mime_type (str): e.g., "text/css", default "application/octet-stream".
+        :param path (str): request path (e.g., "/css/chat.css").
         """
         if not mimetypes.inited:
             mimetypes.init()
@@ -186,16 +171,13 @@ class Response:
         return mime_type or "application/octet-stream"
 
     def prepare_content_type(self, mime_type: str = "text/html") -> str:
-        """Set Content-Type and choose the base directory for static resolution.
-
-        Inputs:
-            - mime_type (str): resolved MIME type.
-
-        Outputs:
-            - base_dir (str): filesystem base directory for the given MIME.
-
-        Side-effects:
-            - Sets self.headers['Content-Type'] to the provided mime_type.
+        """
+        Set Content-Type and choose the base directory for static resolution. Sets self.headers['Content-Type'] to the provided mime_type.
+        Args:
+            mime_type (str): resolved MIME type.
+        
+        Returns:
+            str: filesystem base directory for the given MIME.
         """
         base_dir = ""
 
@@ -204,9 +186,6 @@ class Response:
         except ValueError:
             main_type = "application"
             sub_type = "octet-stream"
-
-        # Minimal debug log for lab observability
-        print(f"[Response] MIME negotiated main_type={main_type} sub_type={sub_type}")
 
         self.headers[HEADER_CONTENT_TYPE] = mime_type
 
@@ -244,7 +223,9 @@ class Response:
         Raises:
             - FileNotFoundError: if the file does not exist or invalid path.
         """
-        rel = os.path.normpath(path.lstrip("/"))
+        # Strip query string (e.g., "/?fbclid=..." -> "/")
+        path_without_query = path.split('?')[0] if '?' in path else path
+        rel = os.path.normpath(path_without_query.lstrip("/"))
         base_leaf = os.path.basename(os.path.normpath(base_dir))
 
         # Collapse leading duplicates, e.g., "css/css/file.css"
@@ -277,10 +258,6 @@ class Response:
         except IsADirectoryError:
             print(f"[Response] Attempted to read a directory: {filepath}")
             raise FileNotFoundError
-
-    # ----------------------------
-    # Response building
-    # ----------------------------
 
     def build_response_bytes(self) -> bytes:
         status = self.status_code or 200
@@ -353,7 +330,6 @@ class Response:
         Outputs:
             - header bytes suitable to be written to a socket.
         """
-        # Delegate to build_response_bytes and return header portion only.
         full = self.build_response_bytes()
         marker = CRLF2.encode("utf-8")
         idx = full.find(marker)
@@ -444,10 +420,6 @@ class Response:
 
         return self.build_response_bytes()
 
-    # ----------------------------
-    # Cookies
-    # ----------------------------
-
     def set_cookie(
         self,
         name: str,
@@ -459,20 +431,28 @@ class Response:
     ) -> None:
         """Set a cookie on the response.
 
-        Inputs:
-            - name (str): cookie name.
-            - value (str): cookie value (unquoted).
-            - max_age (int|None): optional Max-Age attribute in seconds.
-            - path (str): Path attribute (default '/').
-            - httponly (bool): add HttpOnly attribute.
-            - secure (bool): add Secure attribute.
+        Args:
+            name (str): cookie name.
+            value (str): cookie value (unquoted).
+            max_age (int|None): optional Max-Age attribute in seconds.
+            path (str): Path attribute (default '/').
+            httponly (bool): add HttpOnly attribute.
+            secure (bool): add Secure attribute.
 
         Side-effects:
-            - Adds/overwrites a raw cookie string into self.cookies.
+            Adds/overwrites a raw cookie string into self.cookies.
         """
         self.cookies[name] = Cookie(name, value, path, max_age, httponly, secure)
 
 def _reason_phrase_for(code: int) -> str:
+    """Return the standard reason phrase for a given HTTP status code.
+
+    Args:
+        code (int): HTTP status code.
+
+    Returns:
+        str: Reason phrase for the status code (default "OK" if unknown).
+    """
     return {
         200: "OK",
         302: "Found",

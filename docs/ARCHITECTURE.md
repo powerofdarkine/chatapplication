@@ -83,7 +83,7 @@
 - `POST /api/login` - Authenticate user, set cookie
 - `POST /api/submit-info` - Register peer, spawn P2P daemon
 - `GET /api/get-list` - Get list of online peers
-- `POST /api/broadcast-peer` - Long-poll for peer events (join/leave/update)
+- `POST /api/broadcast-peer` - Poll for peer events (join/leave/update). Note: current implementation responds immediately (short-poll);
 - `POST /api/heartbeat` - Update last_seen, return expired peers
 - `POST /api/p2p-request` - Send connection request
 - `POST /api/p2p-accept` - Accept and establish P2P connection
@@ -181,7 +181,7 @@ let pendingConnectionRequest = null;
 ```
 
 **UI Flow**:
-1. Login → /api/login
+1. Login → /login
 2. Register P2P → /api/submit-info (daemon spawned)
 3. Discover peers → /api/get-list + /api/broadcast-peer
 4. Request connection → /api/p2p-request
@@ -217,7 +217,7 @@ Browser:
 
 ```
 Browser (User A):
-1. Calls /api/submit-info {display_name, channels}
+1. Calls /api/submit-info {display_name}
 
 Backend:
 1. Spawn P2P daemon on port 9100
@@ -363,7 +363,7 @@ Browser B (polling /api/broadcast-peer):
 
 | Component | Action | Interval | Timeout |
 |-----------|--------|----------|---------|
-| Frontend | Poll peer events | 3s | 30s long-poll |
+| Frontend | Poll peer events | 3s | short-poll (server responds immediately) |
 | Frontend | Poll messages | 2s | N/A |
 | Frontend | Poll connection requests | 2s | N/A |
 | Frontend | Poll connection responses | 2s | N/A |

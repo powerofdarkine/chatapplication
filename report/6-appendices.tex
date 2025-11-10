@@ -274,9 +274,9 @@ class PeerTracker:
 \subsection{Frontend Logic (\texttt{chat.js})}
 \label{sec:appendix_frontend}
 
-\subsubsection{Client-Side Long-Polling}
+\subsubsection{Client-Side Polling (short-poll)}
 \label{subsec:appendix_polling}
-The \texttt{pollMessages} function implements the client-side of the long-polling mechanism. It periodically calls the \texttt{/api/p2p-receive} endpoint and processes the returned messages, including handling the special \texttt{CLOSE} message type to gracefully end a session.
+The \texttt{pollMessages} function implements the client-side polling (short-poll) mechanism. It periodically calls the \texttt{/api/p2p-receive} endpoint and processes the returned messages, including handling the special \texttt{CLOSE} message type to gracefully end a session.
 
 \begin{lstlisting}[language=Java, caption={Polling for Messages}, label={lst:poll_messages}]
 // Poll for incoming P2P messages
@@ -458,7 +458,7 @@ The following table details the RESTful API endpoints provided by the HTTP Bridg
     \hline
     GET & \texttt{/api/get-list} & Retrieves a list of all currently online peers, excluding the requesting user. \\
     \hline
-    POST & \texttt{/api/broadcast-peer} & Long-polling endpoint for receiving real-time peer events (e.g., `peer-joined`, `peer-left`). \\
+    POST & \texttt{/api/broadcast-peer} & Polling (short-poll) endpoint for receiving real-time peer events (e.g., `peer-joined`, `peer-left`). \\
     \hline
     POST & \texttt{/api/heartbeat} & Sent periodically by the client to signal to the tracker that the peer is still active. Prevents the peer from being marked as expired. \\
     \hline
@@ -599,7 +599,7 @@ This section presents the actual logs captured from the system during the execut
 [P2P->Queue] Message from 'user1' queued for 'user2'
 [SampleApp] 'user2' polled 1 messages
 \end{lstlisting}
-\textbf{Analysis:} The logs validate the HTTP-to-TCP-to-HTTP message bridge. The \texttt{/api/p2p-send} call from \texttt{user1}'s browser results in a \texttt{CHAT} message being sent over the direct TCP link. \texttt{user2}'s daemon receives it, places it in the user-specific queue, and the message is retrieved by \texttt{user2}'s browser via a long-poll to \texttt{/api/p2p-receive}. This matches the logic in Listings~\ref{lst:p2p_send} and \ref{lst:p2p_receive}.
+	extbf{Analysis:} The logs validate the HTTP-to-TCP-to-HTTP message bridge. The \texttt{/api/p2p-send} call from \texttt{user1}'s browser results in a \texttt{CHAT} message being sent over the direct TCP link. \texttt{user2}'s daemon receives it, places it in the user-specific queue, and the message is retrieved by \texttt{user2}'s browser via periodic polling to \texttt{/api/p2p-receive}. This matches the logic in Listings~\ref{lst:p2p_send} and \ref{lst:p2p_receive}.
 
 \subsection{Scenario 4: Peer Disconnection via Heartbeat Timeout}
 \textbf{Description:} \texttt{user1}'s client is closed. After 30 seconds, the tracker no longer receives heartbeats from \texttt{user1} and marks the peer as \texttt{OFFLINE}.

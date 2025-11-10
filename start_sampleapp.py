@@ -25,23 +25,18 @@ and can be configured via command-line arguments.
 """
 
 import json
-import socket
 import base64
 import os
 import time
 import threading
-from urllib.parse import parse_qs
 from collections import defaultdict, deque
 import argparse
 
 from daemon.weaprous import WeApRous
 from daemon.tracker import get_tracker
 from daemon.p2p_daemon import P2PDaemon
-from daemon.cookies import make_set_cookie, Cookie
-from daemon.http_consts import HEADER_CONTENT_TYPE, HEADER_LOCATION, HEADER_WWW_AUTHENTICATE
-
-PORT = 9001  # Default port
-P2P_PORT_BASE = 9100  # Base port for P2P connections
+from daemon.cookies import Cookie
+from daemon.http_consts import HEADER_CONTENT_TYPE, HEADER_LOCATION, HEADER_WWW_AUTHENTICATE, DEFAULT_IP, DEFAULT_SERVER_PORT, P2P_PORT_BASE
 
 app = WeApRous()
 
@@ -188,9 +183,18 @@ def get_user_info(headers, body, username=None):
     }
 
 def get_or_create_p2p_daemon(username):
-    """
-    Get or create P2P daemon for a user.
-    Each user gets a unique P2P port (P2P_PORT_BASE + user_index).
+    """Return a per-user P2PDaemon, creating and starting it if needed.
+
+    Each user is assigned a deterministic P2P port calculated from
+    ``P2P_PORT_BASE`` plus the user's index in the sorted user list. The
+    created daemon is started and callbacks are wired to enqueue messages
+    into the application's browser-polling queues.
+
+    Args:
+        username (str): Application username for which to obtain the daemon.
+
+    Returns:
+        P2PDaemon: Running daemon instance associated with ``username``.
     """
     global p2p_daemons
     
@@ -215,7 +219,7 @@ def get_or_create_p2p_daemon(username):
             # Queue message for browser polling
             with message_lock:
                 message_queues[username].append(msg)
-            print(f"[P2P→Queue] Message from '{from_peer}' queued for '{username}'")
+            print(f"[P2P-Queue] Message from '{from_peer}' queued for '{username}'")
         
         def on_peer_connected(peer_id):
             print(f"[P2P] '{username}' connected to '{peer_id}'")
@@ -241,7 +245,7 @@ def get_or_create_p2p_daemon(username):
 def submit_peer_info(headers, body, username=None):
     """
     Register peer information after login (Task 2 P2P).
-    POST /api/submit-info with JSON: {port, display_name, channels}
+    POST /api/submit-info with JSON: {port, display_name}
     
     Now automatically starts P2P daemon for this user.
     """
@@ -266,8 +270,7 @@ def submit_peer_info(headers, body, username=None):
             peer_id=username,
             ip=client_ip,
             port=p2p_port,
-            display_name=data.get('display_name', username),
-            channels=data.get('channels', ['general'])
+            display_name=data.get('display_name', username)
         )
         
         # Event already broadcasted internally by register_peer
@@ -298,7 +301,7 @@ def submit_peer_info(headers, body, username=None):
 def get_peer_list(headers, body, username=None):
     """
     Get list of online peers (Task 2 P2P).
-    GET /api/get-list returns: {peers: [{peer_id, display_name, ip, port, status, channels}, ...]}
+    GET /api/get-list returns: {peers: [{peer_id, display_name, ip, port, status}, ...]}
     """
     try:
         # get_peers returns list of dicts (not Peer objects)
@@ -710,7 +713,9 @@ def p2p_connect(headers, body, username=None):
     """
     Initiate P2P connection to a peer.
     POST /api/p2p-connect with JSON: {to_peer}
-    Returns: {status, message}
+    
+    Returns:
+        {status, message}
     """
     try:
         data = json.loads(body) if body else {}
@@ -779,14 +784,19 @@ def p2p_connect(headers, body, username=None):
 def p2p_send(headers, body, username=None):
     """
     Send P2P message to a peer.
-    POST /api/p2p-send with JSON: {to_peer, message, type}
-    Returns: {status, message}
+    POST /api/p2p-send with 
+    
+    Args:
+        body ({to_peer, message, type})
+
+    Returns:
+        {status, message}
     """
     try:
         data = json.loads(body) if body else {}
         to_peer = data.get('to_peer')
         message = data.get('message', '')
-        msg_type = data.get('type', 'CHAT')  # Can be CHAT or CLOSE
+        msg_type = data.get('type', 'CHAT')
         
         if not to_peer:
             return {
@@ -957,17 +967,6 @@ def p2p_status(headers, body, username=None):
             'body': json.dumps({'error': str(e)})
         }
 
-
-# Legacy endpoint - redirect to P2P
-@app.route('/api/message', methods=['POST'])
-def send_message(headers, body, username=None):
-    """
-    Legacy endpoint - redirects to P2P send.
-    """
-    print(f"[SampleApp] ℹ Legacy /api/message called by {username}, redirecting to P2P")
-    return p2p_send(headers, body, username)
-
-
 def load_html(filename):
     """
     Helper function to load HTML files.
@@ -1000,8 +999,8 @@ if __name__ == "__main__":
         description='WeApRous sample application with authentication',
         epilog='Task 1 & 2 implementation'
     )
-    parser.add_argument('--server-ip', default='127.0.0.1')
-    parser.add_argument('--server-port', type=int, default=PORT)
+    parser.add_argument('--server-ip', default=DEFAULT_IP)
+    parser.add_argument('--server-port', type=int, default=DEFAULT_SERVER_PORT)
  
     args = parser.parse_args()
     ip = args.server_ip

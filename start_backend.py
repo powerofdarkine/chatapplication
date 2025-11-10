@@ -26,10 +26,7 @@ import socket
 import argparse
 
 from daemon import create_backend
-
-# Default IP and port number used if none is specified via command-line arguments.
-IP = '127.0.0.1'
-PORT = 9000 
+from daemon.http_consts import DEFAULT_IP, DEFAULT_SERVER_PORT
 
 if __name__ == "__main__":
     """
@@ -50,14 +47,14 @@ if __name__ == "__main__":
     )
     parser.add_argument('--server-ip',
         type=str,
-        default=IP,
-        help='IP address to bind the server. Default is {}'.format(IP)
+        default=DEFAULT_IP,
+        help='IP address to bind the server. Default is {}'.format(DEFAULT_IP)
     )
     parser.add_argument(
         '--server-port',
         type=int,
-        default=PORT,
-        help='Port number to bind the server. Default is {}.'.format(PORT)
+        default=DEFAULT_SERVER_PORT,
+        help='Port number to bind the server. Default is {}.'.format(DEFAULT_SERVER_PORT)
     )
  
     args = parser.parse_args()

@@ -10,7 +10,7 @@ The system strictly adheres to CO3094 course restrictions: **no external librari
 
 ### Key Features ✨
 - Cookie-based authentication with session management
-- Real-time peer discovery via HTTP long-polling
+- Real-time peer discovery via HTTP polling (short-poll; frontend polls the backend periodically)
 - Request/accept pattern for P2P connection establishment
 - Direct TCP messaging between peers (no server relay)
 - Connection health monitoring with PING/PONG keepalive
@@ -232,9 +232,6 @@ start_all.bat  # Windows
 |------|---------|---------|
 | `ARCHITECTURE.md` | System design | Architecture diagrams, data flows, threading model |
 | `PROTOCOL.md` | API specification | HTTP endpoints, P2P messages, JSON schemas |
-| `RESTRICTIONS.md` | Course compliance | Checklist of allowed/forbidden technologies |
-| `TESTING.md` | Test procedures | 26 test scenarios with curl examples |
-| `TROUBLESHOOTING.md` | Issue resolution | 30+ common problems with solutions |
 
 ### config/
 
@@ -256,7 +253,7 @@ start_all.bat  # Windows
 - Cookie-based authentication
 - Session management
 - Peer registration and discovery
-- HTTP long-polling for real-time events
+- HTTP polling (short-poll) for real-time events
 
 ### Phase 2: P2P Direct Messaging
 - TCP handshake protocol (CONNECT/ACCEPT/REJECT)
@@ -277,7 +274,7 @@ This project adheres to strict course requirements:
 ### Frontend
 - Vanilla HTML/CSS/JS only (no frameworks)
 - No WebSocket or WebRTC
-- HTTP long-polling for events
+- HTTP polling (short-poll) for events
 - No external CDNs or libraries
 
 ### Backend
@@ -291,8 +288,6 @@ This project adheres to strict course requirements:
 - Fixed ports: 8080 (proxy), 9001 (backend), 9100-9199 (P2P)
 - Static files served by Python HTTP stack
 - No external web servers
-
-See [docs/RESTRICTIONS.md](docs/RESTRICTIONS.md) for complete compliance checklist.
 
 ## Bug Fixes Summary
 
@@ -329,8 +324,6 @@ This version includes three critical bug fixes:
 
 **Files Modified**: `daemon/p2p_daemon.py`, backend forwards CLOSE to message queue
 
-**Testing**: See `docs/TESTING.md` for detailed test scenarios for each bug fix.
-
 ## Known Limitations
 
 1. **NAT Traversal**: P2P connections work on local networks only. NAT hole punching not implemented.
@@ -345,11 +338,6 @@ This version includes three critical bug fixes:
 - **JavaScript**: 2-space indent, strict mode, BEM-style naming
 - **HTML/CSS**: Semantic tags, no inline styles
 
-### Testing
-See [docs/TESTING.md](docs/TESTING.md) for test scenarios.
-
-### Troubleshooting
-See [docs/TROUBLESHOOTING.md](docs/TROUBLESHOOTING.md) for common issues.
 
 ## License
 

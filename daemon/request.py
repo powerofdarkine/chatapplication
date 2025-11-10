@@ -67,7 +67,7 @@ class Request:
     def __init__(self) -> None:
         """Initialize an empty Request."""
         self.method: Optional[str] = None
-        self.url: Optional[str] = None  # not used by server; kept for parity
+        self.url: Optional[str] = None
         self.path: Optional[str] = None
         self.version: Optional[str] = None
 
@@ -77,16 +77,11 @@ class Request:
         # Parsed cookie key/value pairs.
         self.cookies: Dict[str, str] = {}
 
-        # Raw body as text (decoded ISO-8859-1). Routes can re-decode as needed.
         self.body: str = ""
 
         # Routing context
         self.routes: Dict = {}
         self.hook = None
-
-    # ---------------------------------------------------------------------
-    # Parsing helpers
-    # ---------------------------------------------------------------------
 
     def extract_request_line(self, first_line: str) -> Tuple[Optional[str], Optional[str], Optional[str]]:
         """Parse the start-line: METHOD SP REQUEST-TARGET SP HTTP-VERSION.
@@ -98,7 +93,6 @@ class Request:
             - (method, path, version) or (None, None, None) on error.
         """
         try:
-            # Ensure we only consider a single line
             first_line = first_line.strip(CRLF)
             parts = first_line.split()
             if len(parts) != 3:
@@ -106,7 +100,6 @@ class Request:
 
             method, path, version = parts[0], parts[1], parts[2]
 
-            # Default route for "/"
             if path == "/":
                 path = "/index.html"
 
@@ -129,27 +122,22 @@ class Request:
             line = raw.strip(CRLF)
             if not line:
                 continue
-            # Only split on the first ":" to support values containing ":".
             if ":" in line:
                 key, val = line.split(":", 1)
-                headers[key.strip()] = val.lstrip()  # keep leading spaces in value trimmed
+                headers[key.strip()] = val.lstrip()
         return headers
-
-    # ---------------------------------------------------------------------
-    # Main entry: parse the raw request string into fields
-    # ---------------------------------------------------------------------
 
     def prepare(self, request: str, routes: Optional[Dict] = None) -> None:
         """Parse a raw HTTP/1.x request into this Request instance.
 
-        Inputs:
-            - request (str): raw request text. If the original was bytes,
+        Args:
+            request (str): raw request text. If the original was bytes,
               decode using ISO-8859-1 before calling this method.
-            - routes (dict|None): optional routing table keyed by (METHOD, PATH).
+            routes (dict|None): optional routing table keyed by (METHOD, PATH).
 
         Side-effects:
-            - Populates method/path/version/headers/cookies/body.
-            - If routes are provided, sets 'hook' to the matched function.
+            Populates method/path/version/headers/cookies/body.
+            If routes are provided, sets 'hook' to the matched function.
         """
         # 1) Split header block and body by the first blank line.
         header_block, body = self._split_headers_body(request)
@@ -185,16 +173,21 @@ class Request:
             self.routes = routes
             self.hook = routes.get((self.method, self.path))
 
-    # ---------------------------------------------------------------------
-    # Legacy placeholders kept for compatibility with existing imports
-    # ---------------------------------------------------------------------
-
     def prepare_body(self, data, files, json=None):
-        """Compatibility placeholder: server-side parser does not build bodies."""
+        """Compatibility placeholder kept for API parity with client parsers.
+
+        The server-side code does not implement the richer request body
+        construction used by client libraries; this function exists only for
+        compatibility and intentionally performs no work.
+        """
         return
 
     def prepare_content_length(self, body):
-        """Compatibility placeholder: content-length is handled by response builder."""
+        """Compatibility placeholder: content-length is handled elsewhere.
+
+        The response builder is responsible for computing and setting the
+        Content-Length header; this method is a no-op kept for compatibility.
+        """
         return
 
     def prepare_auth(self, auth, url=""):
@@ -204,10 +197,6 @@ class Request:
     def prepare_cookies(self, cookies: str) -> None:
         """Set raw Cookie header value (server-side, rarely needed)."""
         self.headers["Cookie"] = cookies
-
-    # ---------------------------------------------------------------------
-    # Internal utilities
-    # ---------------------------------------------------------------------
 
     @staticmethod
     def _split_headers_body(raw: str) -> Tuple[str, str]:
@@ -223,9 +212,10 @@ class Request:
         if CRLF2 in raw:
             parts = raw.split(CRLF2, 1)
             return parts[0], parts[1]
+        
         # Fallback to LF-only double newline
         if NLINE2 in raw:
             parts = raw.split(NLINE2, 1)
             return parts[0], parts[1]
-        # No body present
+
         return raw, ""

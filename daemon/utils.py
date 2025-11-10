@@ -12,11 +12,17 @@
 
 from urllib.parse import urlparse, unquote
 
-def get_auth_from_url(url):
-    """Given a url with authentication components, extract them into a tuple of
-    username,password.
+def get_auth_from_url(url: str) -> tuple[str, str]:
+    """Extract basic auth credentials from a URL.
 
-    :rtype: (str,str)
+    Parses the supplied URL and returns a (username, password) tuple. If the
+    URL contains no credentials, returns ('', ''). Values are URL-unquoted.
+
+    Args:
+        url (str): URL possibly containing credentials (e.g. "http://user:pass@host/").
+
+    Returns:
+        tuple[str, str]: (username, password) or ('', '') when absent.
     """
     parsed = urlparse(url)
 

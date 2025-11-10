@@ -4,19 +4,19 @@
 
 ### Authentication
 
-#### POST /api/login
+#### POST /login
 
 Authenticate user and establish session.
 
 **Request:**
 ```http
-POST /api/login HTTP/1.1
+POST /login HTTP/1.1
 Content-Type: application/x-www-form-urlencoded
 
 username=user1&password=pass123
 ```
 
-**Response (Success):**
+**Response (Success):**n
 ```http
 HTTP/1.1 302 Found
 Set-Cookie: session=dXNlcjE6MTczMDY3ODQwMA==; Path=/
@@ -40,18 +40,17 @@ Register peer and spawn P2P daemon.
 **Request:**
 ```json
 {
-  "display_name": "User One",
-  "channels": ["general"]
+  "display_name": "User One"
 }
 ```
 
 **Response:**
 ```json
 {
-  "status": "registered",
+  "status": "success",
   "peer_id": "user1",
-  "port": 9100,
-  "ip": "127.0.0.1"
+  "p2p_port": 9100,
+  "message": "Peer registered and P2P daemon started"
 }
 ```
 
@@ -78,6 +77,8 @@ Get list of all online peers.
 #### POST /api/broadcast-peer
 
 Long-poll for peer events (join, leave, update).
+
+**Note:** The current implementation in the codebase responds immediately (short-poll) with available events. Server-side timed long-poll waiting (blocking the request until events arrive) is not implemented; clients poll this endpoint periodically (see frontend intervals).
 
 **Request:**
 ```json
@@ -272,6 +273,8 @@ Poll for incoming P2P messages.
   ]
 }
 ```
+
+**Note:** In the current implementation `p2p-receive` filters server-side messages by the provided `since` timestamp and returns matching messages, but does not remove them from the server-side queue. Clients rely on the `timestamp` (or `msg_id`) to avoid processing duplicates. If you require consume-on-read semantics, the backend should be changed to atomically remove returned messages under `message_lock`.
 
 #### POST /api/p2p-disconnect
 
@@ -480,7 +483,7 @@ Note: `body` in CLOSE message is optional. `__SESSION_ENDED__` is a special mark
 
 | Parameter | Value | Purpose |
 |-----------|-------|---------|
-| HTTP long-poll timeout | 30s | Max wait for events |
+| HTTP long-poll timeout | N/A (server responds immediately - short-poll) | Server-side timed long-poll waiting is not implemented; clients poll periodically |
 | Frontend poll interval (events) | 3s | Peer join/leave updates |
 | Frontend poll interval (messages) | 2s | Chat message updates |
 | Frontend poll interval (requests) | 2s | Connection request updates |

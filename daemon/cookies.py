@@ -20,10 +20,18 @@ TOKEN_RE = re.compile(r"^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$")
 
 @dataclass
 class Cookie:
-  """HTTP response cookie representation.
+  """Representation of an HTTP response cookie.
 
-  Fields: name, value, path, max_age, httponly, secure.
-  Method render_set_cookie() returns the value for a Set-Cookie header.
+  Attributes:
+      name (str): Cookie name.
+      value (str): Cookie value (unquoted string).
+      path (str): Path attribute (defaults to '/').
+      max_age (Optional[int]): Max-Age in seconds, or None.
+      httponly (bool): HttpOnly flag.
+      secure (bool): Secure flag.
+
+  Methods:
+      render_set_cookie(): Return the Set-Cookie header value for this cookie.
   """
   name: str
   value: str
@@ -50,11 +58,17 @@ class Cookie:
     return "; ".join(parts)
   
 def parse_cookie_header(header: Optional[str]) -> Dict[str, str]:
-  """Parse a Cookie header into a dict[name -> value].
+  """Parse a `Cookie` header string into a mapping of names to values.
 
-  - Skips empty or malformed segments (logs via print).
-  - Unquotes percent-encoding and surrounding double-quotes.
-  - Validates cookie name token; invalid names are skipped.
+  The parser is conservative: malformed segments are skipped and reported
+  via print statements. Percent-encoding and surrounding quotes are
+  unescaped for values.
+
+  Args:
+      header (Optional[str]): Raw Cookie header value.
+
+  Returns:
+      Dict[str, str]: Mapping cookie name -> value.
   """
   out: Dict[str, str] = {}
   if not header:
@@ -87,6 +101,18 @@ def make_set_cookie(
     path: str = "/",
     httponly: bool = True,
     secure: bool = False) -> str:
-  """Convenience helper: create Cookie (using named args) and return its Set-Cookie string."""
+  """Create a Cookie object and return its Set-Cookie header value.
+
+  Args:
+      name (str): Cookie name.
+      value (str): Cookie value.
+      max_age (Optional[int]): Max-Age attribute in seconds.
+      path (str): Path attribute.
+      httponly (bool): HttpOnly flag.
+      secure (bool): Secure flag.
+
+  Returns:
+      str: Formatted Set-Cookie header value (without the header name).
+  """
   c = Cookie(name, value, path, max_age, httponly, secure)
   return c.render_set_cookie()

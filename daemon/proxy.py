@@ -40,10 +40,6 @@ from .httpadapter import HttpAdapter
 from .dictionary import CaseInsensitiveDict
 from .http_consts import CRLF, CRLF2
 
-# ----------------------------
-# Round-robin state (thread-safe)
-# ----------------------------
-
 _round_robin_global_lock = threading.Lock()
 _round_robin_locks: Dict[str, threading.Lock] = {}
 _round_robin_indices: Dict[str, int] = {}
@@ -53,21 +49,16 @@ def _normalize_host_for_key(host_header: str) -> str:
     """Normalize Host header to a dict key (lowercase, strip port)."""
     return host_header.split(":", 1)[0].lower().strip()
 
-
-# ----------------------------
-# Backend forwarding
-# ----------------------------
-
 def forward_request(host: str, port: int, request: str) -> bytes:
-    """Forward a raw HTTP request to a backend and return raw HTTP response bytes.
+    """Forward a raw HTTP request to a backend and return the backend response bytes.
 
-    Inputs:
-        - host (str): backend IP/hostname.
-        - port (int): backend TCP port.
-        - request (str): full HTTP request (headers + CRLFCRLF + optional body).
+    Args:
+        host (str): Backend IP or hostname.
+        port (int): Backend TCP port.
+        request (str): Full HTTP request text (headers + CRLFCRLF + optional body).
 
-    Outputs:
-        - bytes: raw HTTP response from backend.
+    Returns:
+        bytes: Raw HTTP response bytes from the backend, or a 502 response on error.
     """
     backend = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     backend.settimeout(5.0)
@@ -90,28 +81,19 @@ def forward_request(host: str, port: int, request: str) -> bytes:
         except Exception:
             pass
 
-
-# ----------------------------
-# Routing / policy resolution
-# ----------------------------
-
 def resolve_routing_policy(hostname: str, routes: Dict) -> Tuple[Optional[str], Optional[int]]:
-    """Resolve (host, port) for a given HTTP Host header using routes and policy.
+    """Resolve a backend host and port for a given Host header using routing config.
 
-    Inputs:
-        - hostname (str): value from Host header (may include port).
-        - routes (dict): per-host config like:
-            routes = {
-              "app.local": {
-                 "backends": ["127.0.0.1:9001", "127.0.0.1:9002"],
-                 "policy": "round-robin",
-                 "headers": {"Host": "$host"}
-              },
-              ...
-            }
+    The routing table maps host keys to a dict containing "backends" and
+    optional policy (e.g., "round-robin"). This function supports exact
+    matches and fallback matches that ignore the client-supplied port.
 
-    Outputs:
-        - (host, port) or (None, None) if not found/invalid.
+    Args:
+        hostname (str): Value from the Host header (may include port).
+        routes (Dict): Routing configuration mapping host -> config dict.
+
+    Returns:
+        Tuple[Optional[str], Optional[int]]: (host, port) or (None, None) if not found.
     """
     # Exact match
     route_info = routes.get(hostname.lower())
@@ -121,7 +103,6 @@ def resolve_routing_policy(hostname: str, routes: Dict) -> Tuple[Optional[str], 
         host_only = _normalize_host_for_key(hostname)
         route_info = routes.get(host_only)
 
-        # Fuzzy: compare host part of keys (ignore port)
         if route_info is None:
             for key, info in routes.items():
                 if _normalize_host_for_key(key) == host_only:
@@ -136,44 +117,46 @@ def resolve_routing_policy(hostname: str, routes: Dict) -> Tuple[Optional[str], 
     backends = route_info["backends"]
     policy = route_info.get("policy", "first")
 
-    # Single backend: choose it
     if len(backends) == 1:
         chosen = backends[0]
-    # Round-robin across multiple backends (thread-safe per host-key)
+
     elif policy == "round-robin":
         host_key = _normalize_host_for_key(hostname)
+        
         with _round_robin_global_lock:
             if host_key not in _round_robin_locks:
                 _round_robin_locks[host_key] = threading.Lock()
                 _round_robin_indices[host_key] = 0
+        
         with _round_robin_locks[host_key]:
             idx = _round_robin_indices[host_key]
             chosen = backends[idx]
             _round_robin_indices[host_key] = (idx + 1) % len(backends)
+    
     else:
         chosen = backends[0]
 
     try:
         proxy_host, proxy_port_str = chosen.split(":", 1)
         return proxy_host.strip(), int(proxy_port_str.strip())
+    
     except ValueError:
         print(f"[Proxy] Invalid backend format: {chosen}")
         return None, None
 
-
-# ----------------------------
-# Client handling
-# ----------------------------
-
 def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -> None:
-    """Handle a single client connection: read request, route, forward, return.
+    """Serve one client connection: parse Host header, forward to backend, return response.
 
-    Inputs:
-        - ip (str): proxy bind IP (for logs only).
-        - port (int): proxy bind port (for logs only).
-        - conn (socket.socket): accepted client socket.
-        - addr: client address tuple.
-        - routes (dict): routing configuration.
+    The function reads a single HTTP request from ``conn``, resolves the
+    appropriate backend using :func:`resolve_routing_policy`, forwards the
+    request, and writes the backend response back to the client socket.
+
+    Args:
+        ip (str): Proxy bind IP (used for logs).
+        port (int): Proxy bind port (used for logs).
+        conn (socket.socket): Accepted client socket.
+        addr: Client address tuple.
+        routes (Dict): Routing configuration.
     """
     try:
         conn.settimeout(5.0)
@@ -186,7 +169,6 @@ def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -
         except Exception:
             request = request_bytes.decode("iso-8859-1", errors="replace")
 
-        # Split headers/body
         try:
             header_part, body_part = request.split(CRLF2, 1)
         except ValueError:
@@ -218,10 +200,9 @@ def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -
 
         print(f"[Proxy] Forwarding {addr} to {resolved_host}:{resolved_port}")
 
-        # Optionally override/propagate headers from config
         modified_header_lines = []
         headers_to_set = routes.get(hostname, {}).get("headers", {})
-        # If config uses key without port, also check that entry
+
         if not headers_to_set:
             headers_to_set = routes.get(_normalize_host_for_key(hostname), {}).get("headers", {})
 
@@ -229,15 +210,31 @@ def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -
         if headers_to_set.get("Host") == "$host":
             host_header_value = hostname
 
+        client_ip = addr[0] if isinstance(addr, (list, tuple)) and len(addr) > 0 else str(addr)
+        xff_added = False
+
         for line in header_lines:
-            if line.lower().startswith("host:") and host_header_value:
+            low = line.lower()
+            if low.startswith("host:") and host_header_value:
                 modified_header_lines.append(f"Host: {host_header_value}")
+            elif low.startswith("x-forwarded-for:"):
+                try:
+                    existing = line.split(":", 1)[1].strip()
+                except Exception:
+                    existing = ''
+                if existing:
+                    modified_header_lines.append(f"X-Forwarded-For: {existing}, {client_ip}")
+                else:
+                    modified_header_lines.append(f"X-Forwarded-For: {client_ip}")
+                xff_added = True
             else:
                 modified_header_lines.append(line)
 
+        if not xff_added:
+            modified_header_lines.append(f"X-Forwarded-For: {client_ip}")
+
         modified_request = CRLF.join(modified_header_lines) + CRLF2 + body_part
 
-        # Forward and return response to client
         backend_response = forward_request(resolved_host, resolved_port, modified_request)
         conn.sendall(backend_response)
 
@@ -251,18 +248,13 @@ def handle_client(ip: str, port: int, conn: socket.socket, addr, routes: Dict) -
         except Exception:
             pass
 
-
-# ----------------------------
-# Server bootstrap
-# ----------------------------
-
 def run_proxy(ip: str, port: int, routes: Dict) -> None:
-    """Run the proxy server loop (blocking).
+    """Run the blocking proxy server loop that accepts connections.
 
-    Inputs:
-        - ip (str): bind IP (e.g., "127.0.0.1").
-        - port (int): bind port (e.g., 8080).
-        - routes (dict): routing configuration (see resolve_routing_policy doc).
+    Args:
+        ip (str): Bind IP address (e.g., "127.0.0.1").
+        port (int): Bind port (e.g., 8080).
+        routes (Dict): Routing configuration (see :func:`resolve_routing_policy`).
     """
     proxy = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     proxy.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)

@@ -45,17 +45,15 @@ class Peer:
     - ip (str): IP address where peer's daemon is reachable
     - port (int): TCP port for the peer's daemon
     - display_name (str): Human-friendly name shown in the UI
-    - channels (list): Optional list of channels/groups the peer joined
     - last_seen (int): Last heartbeat timestamp in milliseconds since epoch
     - status (str): ``ONLINE`` or ``OFFLINE``
     """
 
-    def __init__(self, peer_id, ip, port, display_name, channels=None):
+    def __init__(self, peer_id, ip, port, display_name):
         self.peer_id = peer_id
         self.ip = ip
         self.port = port
         self.display_name = display_name
-        self.channels = channels or []
         # last_seen recorded in epoch milliseconds
         self.last_seen = int(time.time() * 1000)
         self.status = "ONLINE"
@@ -69,7 +67,6 @@ class Peer:
             'display_name': self.display_name,
             'status': self.status,
             'last_seen': self.last_seen,
-            'channels': self.channels
         }
     
     def update_heartbeat(self):
@@ -100,15 +97,19 @@ class PeerTracker:
         self.lock = threading.RLock()
         self.cleanup_thread = None
         self.running = False
-        # initialization log; kept minimal so the tracker can be used in
-        # contexts where stdout is monitored (lab environment)
         print("[Tracker] Initialized")
     
     def start(self):
-        """
-        Start background cleanup thread.
+        """Start the tracker's background cleanup thread.
 
-        Side-effects: Starts a daemon thread that periodically removes expired peers.
+        The cleanup thread runs as a daemon and periodically scans for peers
+        that have not sent heartbeats within ``HEARTBEAT_TIMEOUT_MS`` and
+        expires them. This method is idempotent: calling it when the
+        tracker is already running has no effect.
+
+        Side effects:
+            Starts a daemon :class:`threading.Thread` that executes
+            :meth:`_cleanup_loop`.
         """
         if not self.running:
             self.running = True
@@ -117,31 +118,32 @@ class PeerTracker:
             print("[Tracker] Cleanup thread started")
     
     def stop(self):
-        """
-        Stop background cleanup thread.
+        """Stop the background cleanup thread.
 
-        Side-effects: Requests thread stop and joins briefly.
+        Requests the cleanup loop to stop and joins the thread briefly.
+        Safe to call even if the tracker is not running.
         """
         self.running = False
         if self.cleanup_thread:
             self.cleanup_thread.join(timeout=2)
             print("[Tracker] Cleanup thread stopped")
     
-    def register_peer(self, peer_id, ip, port, display_name, channels=None):
-        """
-        Register or update a peer.
+    def register_peer(self, peer_id, ip, port, display_name):
+        """Register a new peer or update an existing peer.
 
-        :param peer_id: peer identifier
-        :type peer_id: str
-        :param ip: peer IP
-        :type ip: str
-        :param port: peer port
-        :type port: int
-        :param display_name: human-friendly name
-        :type display_name: str
-        :param channels: optional list of channels
-        :type channels: list|None
-        :returns: dict serializable peer state
+        If ``peer_id`` already exists the method updates the peer's address
+        and display name and refreshes its heartbeat timestamp. Otherwise a
+        new :class:`Peer` is created and marked as ``ONLINE``.
+
+        Args:
+            peer_id (str): application-level peer identifier
+            ip (str): IP address where the peer's P2P daemon is reachable
+            port (int): TCP port for the peer's daemon
+            display_name (str): human-friendly display name
+
+        Returns:
+            dict: JSON-serializable representation of the registered peer
+                  (result of :meth:`Peer.to_dict`).
         """
         with self.lock:
             if peer_id in self.peers:
@@ -150,14 +152,13 @@ class PeerTracker:
                 peer.ip = ip
                 peer.port = port
                 peer.display_name = display_name
-                peer.channels = channels or []
                 peer.update_heartbeat()
 
                 event_type = 'peer-updated'
                 print(f"[Tracker] Peer updated: {peer_id}")
             else:
                 # Create a new tracked peer
-                peer = Peer(peer_id, ip, port, display_name, channels)
+                peer = Peer(peer_id, ip, port, display_name)
                 self.peers[peer_id] = peer
 
                 event_type = 'peer-joined'
@@ -169,11 +170,17 @@ class PeerTracker:
             return peer.to_dict()
     
     def unregister_peer(self, peer_id):
-        """
-        Unregister a peer and broadcast leave event.
+        """Unregister a peer and broadcast a ``peer-left`` event.
 
-        :param peer_id: peer identifier (str)
-        :returns: True if removed, False otherwise
+        The peer is marked ``OFFLINE``, a ``peer-left`` event is appended to
+        all other peers' event queues, and the peer is removed from the
+        active map.
+
+        Args:
+            peer_id (str): identifier of the peer to remove
+
+        Returns:
+            bool: True if the peer was present and removed, False otherwise
         """
 
         with self.lock:
@@ -192,26 +199,40 @@ class PeerTracker:
             return False
     
     def get_peers(self, exclude_peer=None):
-        """Return a list of active peer dicts.
+        """Return a list of active peers as dictionaries.
 
-        :param exclude_peer: peer_id to omit from the result (useful for
-                             returning a peer list to a caller that must
-                             not include itself)
+        Args:
+            exclude_peer (str, optional): peer id to omit from results.
+
+        Returns:
+            list[dict]: list of peer dicts (as produced by :meth:`Peer.to_dict`).
         """
         with self.lock:
             peers = [p.to_dict() for pid, p in self.peers.items() if pid != exclude_peer]
             return peers
     
     def get_peer(self, peer_id):
-        """Return a single peer's dict or ``None`` if not found."""
+        """Return a single peer's dict or ``None`` if not found.
+
+        Args:
+            peer_id (str): identifier of the peer
+
+        Returns:
+            dict|None: peer representation or ``None`` if no such peer exists
+        """
         with self.lock:
             peer = self.peers.get(peer_id)
             return peer.to_dict() if peer else None
     
     def heartbeat(self, peer_id):
-        """Record that a peer has sent a heartbeat.
+        """Update the peer's last-seen timestamp (heartbeat).
 
-        :returns: True if the peer exists and was updated, False otherwise.
+        Args:
+            peer_id (str): identifier of the peer sending the heartbeat
+
+        Returns:
+            bool: True if the peer exists and the heartbeat was applied,
+                  False if the peer is unknown.
         """
         with self.lock:
             if peer_id in self.peers:
@@ -220,12 +241,15 @@ class PeerTracker:
             return False
     
     def get_expired_peers(self):
-        """Scan for and remove expired peers.
+        """Find peers that have expired and remove them.
 
-        Any peer that has not been seen within ``HEARTBEAT_TIMEOUT_MS`` is
-        considered expired. The method marks the peer offline, broadcasts
-        a ``peer-left`` event, removes it from the active map and returns
-        a list of expired peer IDs.
+        A peer is considered expired when its ``last_seen`` timestamp is
+        older than the configured ``HEARTBEAT_TIMEOUT_MS``. Expired peers
+        are marked ``OFFLINE``, removed from the active map and a
+        ``peer-left`` event is broadcast to remaining peers.
+
+        Returns:
+            list[str]: list of peer_ids that were expired and removed.
         """
         now = int(time.time() * 1000)
         threshold = now - self.HEARTBEAT_TIMEOUT_MS
@@ -234,23 +258,28 @@ class PeerTracker:
         with self.lock:
             for peer_id, peer in list(self.peers.items()):
                 if peer.last_seen < threshold and peer.status == "ONLINE":
-                    # Mark offline and notify others
+                    # Mark offline
                     peer.status = "OFFLINE"
                     expired.append(peer_id)
-
+                    # Notify others
                     self._broadcast_event_locked('peer-left', peer)
 
                     print(f"[Tracker] Peer expired: {peer_id} (last seen: {peer.last_seen})")
-
-                    # Remove from active peers so it won't be reprocessed
+                    # Remove the peer from the active map
                     del self.peers[peer_id]
 
         return expired
     
     def get_events(self, peer_id, since_ts=0):
-        """Return events queued for ``peer_id`` after ``since_ts``.
+        """Return peer events queued since ``since_ts``.
 
-        Events are plain dicts with keys: ``type``, ``peer``, ``ts``.
+        Args:
+            peer_id (str): the peer whose event queue to read
+            since_ts (int): timestamp (ms) to filter events (exclusive)
+
+        Returns:
+            list[dict]: events where each event has keys ``type``,
+                        ``peer`` (dict) and ``ts`` (timestamp ms)
         """
         with self.lock:
             events = self.events.get(peer_id, deque())
@@ -260,10 +289,10 @@ class PeerTracker:
     def _broadcast_event_locked(self, event_type, peer, exclude=None):
         """Append an event to every peer's event queue.
 
-        This helper **must** be called while holding ``self.lock`` to
-        prevent concurrent modifications to ``self.peers`` or ``self.events``.
-        The ``exclude`` parameter allows suppressing delivery to a specific
-        peer (commonly the actor that triggered the event).
+        This helper must be called while holding ``self.lock``. The created
+        event uses :meth:`Peer.to_dict` for the ``peer`` value. The
+        ``exclude`` argument (if provided) is used to skip delivering the
+        event to a specific peer (commonly the actor of the event).
         """
         event = {'type': event_type, 'peer': peer.to_dict(), 'ts': int(time.time() * 1000)}
 
@@ -272,11 +301,11 @@ class PeerTracker:
                 self.events[pid].append(event)
     
     def _cleanup_loop(self):
-        """Background cleanup thread that periodically removes expired peers.
+        """Background loop executed by the cleanup daemon thread.
 
-        The loop calls :meth:`get_expired_peers` and sleeps for
-        ``CLEANUP_INTERVAL_SEC`` between iterations. Any unexpected
-        exception is logged to stdout for debugging in lab runs.
+        The loop periodically invokes :meth:`get_expired_peers` and sleeps
+        for ``CLEANUP_INTERVAL_SEC`` between iterations. Any exceptions are
+        logged and the loop continues so the tracker remains resilient.
         """
         print("[Tracker] Cleanup loop started")
 
@@ -297,9 +326,14 @@ class PeerTracker:
                 traceback.print_exc()
     
     def get_peer_address(self, peer_id):
-        """Return the contact address for ``peer_id`` or ``None``.
+        """Return the contact address (ip/port) for an online peer.
 
-        Only returns addresses for peers currently marked ONLINE.
+        Args:
+            peer_id (str): identifier of the peer to look up
+
+        Returns:
+            dict|None: ``{'ip': ip, 'port': port}`` if peer is ONLINE,
+                       otherwise ``None``.
         """
         with self.lock:
             peer = self.peers.get(peer_id)
@@ -308,10 +342,10 @@ class PeerTracker:
             return None
     
     def generate_nonce(self):
-        """Return a short pseudo-random nonce string for handshakes.
+        """Generate a short, non-cryptographic nonce used in handshakes.
 
-        This uses UUID4 and truncates to 8 characters; suitable for
-        non-cryptographic identification in protocol messages.
+        Returns:
+            str: an 8-character string derived from a UUID4.
         """
         return str(uuid.uuid4())[:8]
 
@@ -320,7 +354,14 @@ class PeerTracker:
 _tracker_instance = None
 
 def get_tracker():
-    """Get global tracker instance."""
+    """Return the global PeerTracker singleton.
+
+    Creates and starts the tracker on first invocation. Subsequent calls
+    return the same running instance.
+
+    Returns:
+        PeerTracker: the global tracker instance.
+    """
     global _tracker_instance
     if _tracker_instance is None:
         _tracker_instance = PeerTracker()

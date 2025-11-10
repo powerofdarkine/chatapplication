@@ -35,6 +35,14 @@ class P2PConnection:
     """Represents an active P2P connection."""
     
     def __init__(self, conn, addr, peer_id, remote_peer_id):
+        """Create a connection wrapper for an active P2P socket.
+
+        Args:
+            conn: the socket object for this connection.
+            addr: remote address tuple (ip, port).
+            peer_id: local peer id (owner of this daemon).
+            remote_peer_id: remote peer id for the connection.
+        """
         self.conn = conn
         self.addr = addr
         self.peer_id = peer_id  # Local peer
@@ -44,7 +52,11 @@ class P2PConnection:
         self.lock = threading.Lock()
     
     def send_line(self, line):
-        """Send a line (must end with \\n)."""
+        """Send a single line (terminated by '\n') to the remote peer.
+
+        Returns True on success, False on failure. Updates last_activity when
+        a send succeeds and marks the connection closed on error.
+        """
         with self.lock:
             if not self.closed:
                 try:
@@ -58,7 +70,7 @@ class P2PConnection:
             return False
     
     def close(self):
-        """Close connection."""
+        """Close the underlying socket and mark the connection closed."""
         with self.lock:
             if not self.closed:
                 self.closed = True
@@ -69,22 +81,32 @@ class P2PConnection:
 
 
 class P2PDaemon:
-    """
-    P2P manages incoming peer connections.
-    Runs as a separate thread listening on a dedicated P2P port.
+    """P2P daemon that manages peer-to-peer TCP connections.
+
+    The daemon listens for incoming P2P connections, performs a simple
+    CONNECT/ACCEPT handshake, tracks active peer connections, and runs a
+    message-processing loop per connection. It also provides methods for
+    initiating outbound connections to peers.
+
+    Attributes:
+        ip (str): Bind address for the daemon.
+        port (int): Listening port for peer connections.
+        peer_id (str): Local peer identifier.
+        connections (dict): Mapping remote_peer_id -> P2PConnection.
     """
     
     HANDSHAKE_TIMEOUT = 3  # seconds
     KEEPALIVE_INTERVAL = 10  # seconds
     IDLE_TIMEOUT = 30  # seconds
     
-    def __init__(self, ip, port, peer_id):
+    def __init__(self, ip: str, port: int, peer_id: str):
         """
         Initialize P2P daemon.
         
-        :param ip: IP to bind (usually 0.0.0.0 or 127.0.0.1)
-        :param port: Port to listen for P2P connections
-        :param peer_id: This peer's ID
+        Args:
+            ip (str): IP to bind (usually 0.0.0.0 or 127.0.0.1)
+            port (int): Port to listen for P2P connections
+            peer_id (str): This peer's ID
         """
         self.ip = ip
         self.port = port
@@ -98,7 +120,7 @@ class P2PDaemon:
         self.accept_thread = None
         self.keepalive_thread = None
         
-        # Message handlers (can be set externally)
+        # Message handlers
         self.on_message = None  # Callback: on_message(from_peer, to_peer, msg_dict)
         self.on_peer_connected = None  # Callback: on_peer_connected(peer_id)
         self.on_peer_disconnected = None  # Callback: on_peer_disconnected(peer_id)
@@ -106,7 +128,11 @@ class P2PDaemon:
         print(f"[P2P] Daemon initialized for peer '{peer_id}' on {ip}:{port}")
     
     def start(self):
-        """Start P2P daemon (listen for connections)."""
+        """Start the daemon: bind socket, start accept and keepalive threads.
+
+        Raises:
+            Exception: If socket bind/listen fails.
+        """
         if self.running:
             print(f"[P2P] Daemon already running")
             return
@@ -138,7 +164,11 @@ class P2PDaemon:
             raise
     
     def stop(self):
-        """Stop P2P daemon."""
+        """Stop the daemon and clean up all resources.
+
+        This method stops background loops, closes all active peer
+        connections and closes the listening socket.
+        """
         if not self.running:
             return
         
@@ -161,7 +191,10 @@ class P2PDaemon:
         print(f"[P2P] Daemon stopped")
     
     def _accept_loop(self):
-        """Accept incoming connections."""
+        """Loop that accepts incoming TCP connections and spawns handlers.
+
+        Runs until ``self.running`` is cleared.
+        """
         print(f"[P2P] Accept loop started")
         
         while self.running:
@@ -187,7 +220,13 @@ class P2PDaemon:
                 break
     
     def _handle_incoming_connection(self, conn, addr):
-        """Handle incoming P2P connection (server side)."""
+        """Perform handshake and integrate an accepted connection.
+
+        The expected handshake is: ``CONNECT <to_peer> <from_peer> <nonce>``.
+        If the handshake is valid and targeted at this daemon, the method
+        replies with ``ACCEPT`` and schedules the message loop for the
+        new connection.
+        """
         try:
             conn.settimeout(self.HANDSHAKE_TIMEOUT)
             
@@ -255,14 +294,16 @@ class P2PDaemon:
                 pass
     
     def connect_to_peer(self, remote_ip, remote_port, remote_peer_id, nonce):
-        """
-        Connect to a remote peer (client side).
-        
-        :param remote_ip: Remote peer's IP
-        :param remote_port: Remote peer's P2P port
-        :param remote_peer_id: Remote peer's ID
-        :param nonce: Handshake nonce from tracker
-        :return: True if connected successfully
+        """Initiate an outbound connection and perform handshake.
+
+        Args:
+            remote_ip (str): Remote peer's IP address.
+            remote_port (int): Remote peer's listening port.
+            remote_peer_id (str): Remote peer's declared ID.
+            nonce (str): Handshake nonce used for validation.
+
+        Returns:
+            bool: True on successful connection and handshake, False otherwise.
         """
         print(f"[P2P] Connecting to '{remote_peer_id}' at {remote_ip}:{remote_port}")
         
@@ -335,13 +376,15 @@ class P2PDaemon:
             return False
     
     def send_message(self, to_peer, body, msg_type='CHAT'):
-        """
-        Send message to peer.
-        
-        :param to_peer: Target peer ID
-        :param body: Message body
-        :param msg_type: Message type (CHAT, PING, PONG, CLOSE)
-        :return: True if sent successfully
+        """Send a JSON-line message to a connected peer.
+
+        Args:
+            to_peer (str): Target peer ID.
+            body (str): Message body (for CHAT) or empty for control messages.
+            msg_type (str): One of 'CHAT', 'PING', 'PONG', 'CLOSE'.
+
+        Returns:
+            bool: True if the message was queued/sent successfully.
         """
         with self.lock:
             conn = self.connections.get(to_peer)
@@ -378,7 +421,11 @@ class P2PDaemon:
             return success
     
     def disconnect_peer(self, peer_id):
-        """Disconnect from a peer."""
+        """Gracefully disconnect and remove a peer connection.
+
+        Sends a CLOSE message, closes the socket, removes from internal
+        map and notifies the on_peer_disconnected callback.
+        """
         with self.lock:
             conn = self.connections.get(peer_id)
             

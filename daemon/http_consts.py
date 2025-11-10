@@ -5,6 +5,12 @@ literal strings in the codebase.
 """
 from datetime import timezone
 
+# Default Value
+DEFAULT_IP = "0.0.0.0"
+DEFAULT_PROXY_PORT = 8080
+DEFAULT_SERVER_PORT = 9001
+P2P_PORT_BASE = 9100
+
 # Line separators
 CRLF = "\r\n"
 CRLF2 = CRLF + CRLF

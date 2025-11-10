@@ -82,7 +82,6 @@ def parse_virtual_hosts(config_file):
                 'headers': headers
             }
     
-    # DEBUG PRINT
     print("--- Proxy Routes Loaded ---")
     for key, value in routes.items():
         print(f"[Host] {key}:\n  -> Backends: {value['backends']}\n  -> Policy: {value['policy']}\n  -> Headers: {value['headers']}")

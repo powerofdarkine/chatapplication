@@ -62,9 +62,8 @@ async function registerP2P() {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                display_name: currentUser,
-                channels: ['general']
-            })
+                    display_name: currentUser
+                })
         });
         
         if (response.ok) {

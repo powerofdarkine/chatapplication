@@ -44,10 +44,9 @@ class WeApRous:
     """
 
     def __init__(self):
-        """
-        Initialize a new WeApRous instance.
+        """Initialize an empty WeApRous application.
 
-        Sets up an empty route registry and prepares placeholders for IP and port.
+        Creates an empty route registry and placeholders for IP/port.
         """
         self.routes = {}
         self.ip = None
@@ -55,11 +54,11 @@ class WeApRous:
         return
 
     def prepare_address(self, ip, port):
-        """
-        Configure the IP address and port for the backend server.
+        """Configure bind address for the backend server.
 
-        :param ip (str): The IP address to bind the server.
-        :param port (str): The port number to listen on.
+        Args:
+            ip (str): IP address to bind the server to.
+            port (int): Port number to listen on.
         """
         self.ip = ip
         self.port = port
@@ -85,13 +84,10 @@ class WeApRous:
         return decorator
 
     def run(self):
-        """
-        Start the backend server and begin handling requests.
+        """Start the backend server using the configured address.
 
-        This method launches the TCP server using the configured IP and port,
-        and dispatches incoming requests to the registered route handlers.
-
-        :raise: Error if IP or port has not been configured.
+        The method delegates to :func:`daemon.backend.create_backend` and will
+        block serving requests until the process is terminated.
         """
         if not self.ip or not self.port:
             print("Rous app need to preapre address"

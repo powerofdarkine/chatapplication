@@ -48,36 +48,36 @@ from .response import *
 from .httpadapter import HttpAdapter
 from .dictionary import CaseInsensitiveDict
 
-def handle_client(ip, port, conn, addr, routes):
-    """
-    Initializes an HttpAdapter instance and delegates the client handling logic to it.
+def handle_client(ip: str, port: int, conn: socket.socket, addr: tuple, routes: dict):
+    """Create an HttpAdapter and delegate handling of a client connection.
 
-    :param ip (str): IP address of the server.
-    :param port (int): Port number the server is listening on.
-    :param conn (socket.socket): Client connection socket.
-    :param addr (tuple): client address (IP, port).
-    :param routes (dict): Dictionary of route handlers.
+    Args:
+        ip (str): Server IP address.
+        port (int): Server port number.
+        conn (socket.socket): Accepted client socket.
+        addr (tuple): Client address (ip, port).
+        routes (dict): Route handler mapping passed to the adapter.
     """
     try:
         daemon = HttpAdapter(ip, port, conn, addr, routes)
-
-        # Handle client
         daemon.handle_client(conn, addr, routes)
+
     except Exception as e:
         print(f"[Backend] Error handling client {addr}: {e}")
     finally:
         conn.close()
 
-def run_backend(ip, port, routes):
-    """
-    Starts the backend server, binds to the specified IP and port, and listens for incoming
-    connections. Each connection is handled in a separate thread. The backend accepts incoming
-    connections and spawns a thread for each client.
+def run_backend(ip: str, port: int, routes: dict):
+    """Start a TCP backend that accepts connections and dispatches them to threads.
 
+    This function creates a listening socket, enables SO_REUSEADDR for fast restarts,
+    and enters an accept loop. For each accepted client it spawns a daemon thread
+    that calls :func:`handle_client`.
 
-    :param ip (str): IP address to bind the server.
-    :param port (int): Port number to listen on.
-    :param routes (dict): Dictionary of route handlers.
+    Args:
+        ip (str): IP address to bind.
+        port (int): Port number to listen on.
+        routes (dict): Route handlers mapping passed to each client adapter.
     """
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -92,11 +92,7 @@ def run_backend(ip, port, routes):
         while True:
             conn, addr = server.accept()
             print(f"[Backend] Accepted connection from {addr}")
-            #
-            #  TODO: implement the step of the client incomping connection
-            #        using multi-thread programming with the
-            #        provided handle_client routine
-            #
+
             client_thread = threading.Thread(
                 target=handle_client,
                 args=(ip, port, conn, addr, routes)
@@ -110,13 +106,13 @@ def run_backend(ip, port, routes):
     finally:
         server.close()
 
-def create_backend(ip, port, routes={}):
-    """
-    Entry point for creating and running the backend server.
+def create_backend(ip: str, port: int, routes: dict={}):
+    """Convenience entry point that starts the backend server.
 
-    :param ip (str): IP address to bind the server.
-    :param port (int): Port number to listen on.
-    :param routes (dict, optional): Dictionary of route handlers. Defaults to empty dict.
+    Args:
+        ip (str): Address to bind the backend server.
+        port (int): Port to listen on.
+        routes (dict): Optional mapping of route handlers.
     """
 
     run_backend(ip, port, routes)
