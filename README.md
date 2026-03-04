@@ -1,4 +1,4 @@
-# CO3094 Hybrid P2P Chat System
+# P2P Chat System
 
 ## Overview
 
